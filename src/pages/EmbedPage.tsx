@@ -21,6 +21,7 @@ const EmbedContainer = styled.div`
   width: 100%;
   height: 100%;
   background: white;
+  min-height: 500px;
 `;
 
 const LoadingContainer = styled.div`
@@ -65,8 +66,11 @@ const EmbedPage: React.FC = () => {
   const tooltipDescription = searchParams.get('tooltipDescription') || 'Popular side hustles and their average monthly earnings in';
 
   useEffect(() => {
-    // Add debug headers
-    addDebugHeaders();
+    // Add CSP headers
+    const meta = document.createElement('meta');
+    meta.httpEquiv = "Content-Security-Policy";
+    meta.content = "frame-ancestors *;";
+    document.head.appendChild(meta);
     
     console.log('EmbedPage mounted');
     console.log('Window location:', window.location.href);

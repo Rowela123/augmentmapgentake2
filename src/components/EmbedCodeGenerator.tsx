@@ -250,12 +250,7 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
     
     const queryString = params.toString() ? `?${params.toString()}` : '';
     
-    return `<p style="padding-left: 80px;">
-      <iframe 
-        style="aspect-ratio: 16/9; width: 100%;" 
-        src="${baseUrl}/embed${queryString}"
-      ></iframe>
-    </p>`;
+    return `<iframe style="aspect-ratio: 16/9; width: 100%;" src="${baseUrl}/embed${queryString}"></iframe>`;
   };
   
   const handleCopyCode = () => {
