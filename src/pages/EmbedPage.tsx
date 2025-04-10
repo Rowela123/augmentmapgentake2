@@ -6,12 +6,12 @@ import { StateData } from '../types';
 import { getSavedMaps, getMapById } from '../utils/storageUtils';
 import { sideHustleData } from '../data/sampleData';
 
-// Add CORS and frame-ancestors headers for embedding
+// Add CORS and embedding headers
 const setupEmbedHeaders = () => {
-  // Add CSP headers to allow embedding from any domain
+  // Add CSP headers for embedding
   const cspMeta = document.createElement('meta');
   cspMeta.httpEquiv = "Content-Security-Policy";
-  cspMeta.content = "frame-ancestors *; default-src 'self' https://* 'unsafe-inline' 'unsafe-eval' data:; connect-src *;";
+  cspMeta.content = "frame-ancestors *;";
   document.head.appendChild(cspMeta);
   
   // Add Access-Control headers
@@ -19,155 +19,106 @@ const setupEmbedHeaders = () => {
   corsHeader.httpEquiv = "Access-Control-Allow-Origin";
   corsHeader.content = "*";
   document.head.appendChild(corsHeader);
-  
-  // Add X-Frame-Options header to allow embedding in iframes
-  const frameHeader = document.createElement('meta');
-  frameHeader.httpEquiv = "X-Frame-Options";
-  frameHeader.content = "ALLOWALL";
-  document.head.appendChild(frameHeader);
-
-  // Add Shopify specific headers
-  const shopifyHeader = document.createElement('meta');
-  shopifyHeader.name = "shopify-feature";
-  shopifyHeader.content = "iframe-resizer";
-  document.head.appendChild(shopifyHeader);
-  
-  console.log('Embed headers added for Shopify compatibility');
 };
 
+// Styled for a full-viewport container
 const EmbedContainer = styled.div`
-  padding: 0;
   margin: 0;
-  overflow: hidden;
+  padding: 0;
   width: 100%;
-  height: 100%;
+  height: 100vh;
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
   background: white;
-  min-height: 500px;
-  border: none;
 `;
 
+// Simple loading indicator
 const LoadingContainer = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 300px;
-  width: 100%;
-  background-color: #f9f9f9;
+  height: 100%;
 `;
 
+// Clean error message
 const ErrorContainer = styled.div`
   padding: 20px;
-  background-color: #fff3f3;
-  border: 1px solid #ffcbcb;
-  border-radius: 4px;
+  text-align: center;
   color: #d32f2f;
-  margin: 10px 0;
-  text-align: center;
 `;
 
-const EmptyMessage = styled.div`
-  text-align: center;
-  padding: 20px;
-  background-color: #f9f9f9;
-  border-radius: 4px;
-  color: #666;
-`;
-
+// This is the embedded view component - it ONLY shows the map
 const EmbedPage: React.FC = () => {
   const [mapData, setMapData] = useState<StateData[]>([]);
-  const [mapTitle, setMapTitle] = useState<string>('Embedded Map');
+  const [mapTitle, setMapTitle] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   
   const [searchParams] = useSearchParams();
   
-  // Scale customization options - can be passed as URL parameters
+  // Get parameters from URL
   const minLabel = searchParams.get('minLabel') || 'Low';
   const maxLabel = searchParams.get('maxLabel') || 'High';
   const scaleTitle = searchParams.get('scaleTitle') || '';
   const tooltipDescription = searchParams.get('tooltipDescription') || 'Popular side hustles and their average monthly earnings in';
-  
-  // Get map ID from URL parameters
   const mapId = searchParams.get('id');
 
   useEffect(() => {
     // Setup headers for embedding
     setupEmbedHeaders();
     
-    console.log('EmbedPage mounted, params:', {
-      mapId,
-      minLabel,
-      maxLabel,
-      scaleTitle,
-      tooltipDescription
-    });
+    // Remove app styles that might interfere
+    document.body.style.margin = '0';
+    document.body.style.padding = '0';
+    document.body.style.overflow = 'hidden';
     
     try {
-      // If a specific map ID is provided, try to load that map
+      // Try to load specific map if ID provided
       if (mapId) {
-        console.log('Attempting to load map with ID:', mapId);
         const savedMap = getMapById(mapId);
         
         if (savedMap && savedMap.data) {
-          console.log('Found saved map:', savedMap.title);
           setMapData(savedMap.data);
-          setMapTitle(savedMap.title);
+          setMapTitle(savedMap.title || '');
           setLoading(false);
           return;
-        } else {
-          console.warn('Map ID provided but map not found, falling back to sample data');
         }
       }
       
-      // Fallback to sample data if no map ID or map not found
-      console.log('Using sample data');
-      if (!sideHustleData || !Array.isArray(sideHustleData)) {
-        throw new Error('Sample data is not available or invalid');
+      // Fallback to sample data
+      if (Array.isArray(sideHustleData) && sideHustleData.length > 0) {
+        setMapData(sideHustleData);
+        setMapTitle('US States Data Visualization');
+        setLoading(false);
+      } else {
+        throw new Error('No map data available');
       }
-
-      // Log the structure of sample data
-      console.log('Sample data structure:', {
-        length: sideHustleData.length,
-        firstItem: sideHustleData[0],
-        keys: Object.keys(sideHustleData[0] || {})
-      });
-
-      setMapData(sideHustleData);
-      setMapTitle('Most Popular Side Hustle in Every US State');
-      setLoading(false);
     } catch (err) {
-      console.error('Error in EmbedPage:', err);
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      console.error('Error loading map data:', err);
+      setError('Failed to load map data');
       setLoading(false);
     }
-  }, [mapId, minLabel, maxLabel, scaleTitle, tooltipDescription]);
+  }, [mapId]);
 
+  // Render ONLY the map component
   return (
     <EmbedContainer>
-      {/* Remove debug information panel */}
       {loading ? (
-        <LoadingContainer>
-          <div>Loading map...</div>
-        </LoadingContainer>
+        <LoadingContainer>Loading map...</LoadingContainer>
       ) : error ? (
-        <ErrorContainer>
-          <div>Error: {error}</div>
-          <div>Please try refreshing the page or contact support if the problem persists.</div>
-        </ErrorContainer>
-      ) : mapData.length > 0 ? (
+        <ErrorContainer>{error}</ErrorContainer>
+      ) : (
         <USMap 
-          data={mapData} 
-          title={mapTitle} 
+          data={mapData}
+          title="" // No title in the map itself
           scaleTitle={scaleTitle}
           minLabel={minLabel}
           maxLabel={maxLabel}
           tooltipDescription={tooltipDescription}
           embedded={true}
         />
-      ) : (
-        <EmptyMessage>
-          No map data available.
-        </EmptyMessage>
       )}
     </EmbedContainer>
   );
