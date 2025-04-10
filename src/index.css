@@ -23,71 +23,61 @@ code {
 .tooltip {
   position: absolute;
   background: #ffffff;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
-  pointer-events: none;
-  z-index: 1000;
-  width: 320px;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
   font-size: 14px;
   line-height: 1.5;
+  max-width: 320px;
+  pointer-events: none;
+  z-index: 1000;
   opacity: 0;
-  transition: opacity 0.3s ease-in-out;
+  transition: opacity 0.2s ease-in-out;
+  backdrop-filter: blur(5px);
   border: 1px solid rgba(0, 0, 0, 0.1);
-  color: #333;
-  backdrop-filter: blur(10px);
 }
 
 .tooltip.visible {
-  opacity: 1;
+  opacity: 0.98;
 }
 
 .tooltip-header {
   display: flex;
   align-items: center;
-  gap: 15px;
-  margin-bottom: 15px;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
 .tooltip-icon {
-  width: 38px;
-  height: 38px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   color: white;
-  font-size: 18px;
-  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
-  transition: transform 0.2s ease-in-out;
-}
-
-.tooltip.visible .tooltip-icon {
-  transform: scale(1.1);
 }
 
 .tooltip-title {
-  font-size: 22px;
-  font-weight: 600;
   margin: 0;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  transition: color 0.3s ease;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
 }
 
 .tooltip-description {
-  font-weight: bold;
-  color: #000;
-  background-color: #f5f5f5;
-  padding: 10px;
-  border-radius: 5px;
-  margin-bottom: 15px;
-  border-left: 4px solid #00ff00;
+  margin: 0 0 12px;
+  color: #666;
+  font-size: 14px;
+}
+
+.tooltip-content {
+  padding-left: 8px;
 }
 
 .tooltip-list {
   margin: 0;
-  padding-left: 22px;
+  padding-left: 20px;
 }
 
 .tooltip-list li {
@@ -95,24 +85,8 @@ code {
   color: #333;
 }
 
-.tooltip-list li strong {
-  font-weight: bold;
-}
-
-.tooltip-item-value {
-  font-weight: 600;
-  display: inline-block;
-  margin-left: 5px;
-  transition: color 0.3s ease;
-}
-
-.tooltip-item-label {
-  display: block;
-  font-weight: normal;
-  color: #555;
-  font-style: italic;
-  margin-top: 2px;
-  font-size: 13px;
+.tooltip-list li:last-child {
+  margin-bottom: 0;
 }
 
 .tooltip-row {
@@ -120,32 +94,37 @@ code {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
-  padding: 5px 0;
-  border-bottom: 1px dotted rgba(0, 0, 0, 0.1);
 }
 
 .tooltip-row .label {
-  color: #555;
-  flex: 1;
+  color: #666;
 }
 
 .tooltip-row .value {
   font-weight: 600;
   color: #333;
-  text-align: right;
-  transition: color 0.3s ease;
 }
 
-.tooltip-row.bold .value {
-  font-weight: 700;
+.state-marker {
+  pointer-events: none;
+  transition: opacity 0.2s ease-in-out;
 }
 
-.tooltip-info {
-  margin-top: 12px;
-  padding-top: 8px;
-  border-top: 1px dashed rgba(0, 0, 0, 0.1);
-  font-style: italic;
-  color: #666;
+@media (max-width: 768px) {
+  .tooltip {
+    max-width: 250px;
+    font-size: 13px;
+    padding: 12px;
+  }
+  
+  .tooltip-title {
+    font-size: 15px;
+  }
+  
+  .tooltip-icon {
+    width: 28px;
+    height: 28px;
+  }
 }
 
 /* State-specific marker styling */
@@ -214,33 +193,6 @@ code {
 
 .state-sidebar rect {
   filter: drop-shadow(0px 2px 2px rgba(0, 0, 0, 0.1));
-}
-
-/* Responsive tooltip behavior on small screens */
-@media (max-width: 768px) {
-  .tooltip {
-    max-width: 280px;
-    font-size: 13px;
-    padding: 15px;
-  }
-  
-  .tooltip-title {
-    font-size: 18px;
-  }
-  
-  .tooltip-icon {
-    width: 32px;
-    height: 32px;
-  }
-  
-  .tooltip-description {
-    font-size: 13px;
-    margin-bottom: 10px;
-  }
-  
-  .tooltip-list {
-    padding-left: 18px;
-  }
 }
 
 /* Add styling for the legend container */

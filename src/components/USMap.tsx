@@ -71,6 +71,9 @@ const CALLOUT_SIDEBAR = {
   labelOffsetX: 15, // Space between the label and the callout line (increased spacing)
 };
 
+// Add this near the top of the file, with other constants
+const tooltipDescription = "Popular side hustles in";
+
 /**
  * Get a state-specific icon SVG path based on state code
  * Each state has a different icon representing common activities/themes
@@ -451,7 +454,7 @@ const USMap: React.FC<MapProps> = ({
             .duration(200)
             .style('opacity', 0.98);
             
-          // Create Minnesota-style tooltip content with state-specific icon and formatted content
+          // Create tooltip content with state-specific icon and formatted content
           let tooltipContent = '';
           
           // Get state-specific icon
@@ -460,93 +463,80 @@ const USMap: React.FC<MapProps> = ({
           // Add header with state-specific icon and state name
           tooltipContent += `
             <div class="tooltip-header">
-              <div class="tooltip-icon" style="background-color: ${stateIcon.color || '#00ff00'}">
+              <div class="tooltip-icon" style="background-color: ${stateIcon.color || '#4CAF50'}">
                 <svg viewBox="${stateIcon.viewBox}" width="18" height="18" fill="currentColor">
                   <path d="${stateIcon.path}"></path>
                 </svg>
               </div>
-              <h3 class="tooltip-title" ${stateIcon.color ? `style="color: ${stateIcon.color}"` : ''}>${feature.properties.name}</h3>
+              <h3 class="tooltip-title" ${stateIcon.color ? `style="color: ${stateIcon.color}"` : ''}>${feature.properties.name.toUpperCase()}</h3>
             </div>
           `;
           
           // Add content based on available data
           if (stateData) {
             // Add description and list items if available
-            if (stateData.label) {
+            if (stateData.label || stateData.info) {
               tooltipContent += `
-                <p class="tooltip-description" style="font-size: 15px; color: #000; font-weight: bold; background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 15px; border-left: 4px solid ${stateIcon.color || '#00ff00'}">
-                  ${tooltipDescription} ${feature.properties.name}
+                <p class="tooltip-description">
+                  ${tooltipDescription} ${feature.properties.name}:
                 </p>
-                <ol class="tooltip-list">
+                <div class="tooltip-content">
               `;
               
-              // Add the main item (from label)
-              tooltipContent += `
-                <li>
-                  ${stateData.label.replace(/\[[0-9,]+\]/g, '').trim()}
-                </li>
-              `;
+              // Create an array to store all items (label + info)
+              const allItems = [];
+              
+              // Add the main item (from label) if it exists
+              if (stateData.label) {
+                allItems.push(formatTooltipItem(stateData.label));
+              }
               
               // If we have additional info, split by commas or line breaks and add as list items
               if (stateData.info) {
                 const additionalItems = stateData.info.split(/,|\n/).filter(Boolean);
-                additionalItems.forEach(item => {
-                  // Only remove numbers within square brackets
-                  const cleanItemText = item
-                    .replace(/\[[0-9,]+\]/g, '')
-                    .replace(/^[:\-—]+|[:\-—]+$/g, '')
-                    .trim();
-                  if (cleanItemText) {
-                    // Check for bold text (marked with ** in Excel)
-                    const boldMatch = cleanItemText.match(/\*\*(.*?)\*\*/);
-                    if (boldMatch && boldMatch.index !== undefined) {
-                      const boldText = boldMatch[1];
-                      const beforeText = cleanItemText.substring(0, boldMatch.index);
-                      const afterText = cleanItemText.substring(boldMatch.index + boldMatch[0].length);
-                      tooltipContent += `<li>${beforeText}<strong>${boldText}</strong>${afterText}</li>`;
-                    } else {
-                      tooltipContent += `<li>${cleanItemText}</li>`;
-                    }
-                  }
-                });
+                allItems.push(...additionalItems.map(formatTooltipItem));
               }
               
-              tooltipContent += `</ol>`;
+              // Add numbered list of items
+              if (allItems.length > 0) {
+                tooltipContent += '<ol class="tooltip-list">';
+                allItems.forEach(item => {
+                  tooltipContent += `<li>${item}</li>`;
+                });
+                tooltipContent += '</ol>';
+              }
+              
+              tooltipContent += '</div>';
             } else {
               // Fallback for states with value but no description
               if (stateData.value !== undefined && stateData.value !== null) {
                 tooltipContent += `
                   <div class="tooltip-row">
                     <span class="label">Value:</span>
-                    <span class="value">${stateData.value}</span>
+                    <span class="value">${formatValue(stateData.value)}</span>
                   </div>
                 `;
-              }
-              
-              // Add info if available
-              if (stateData.info) {
-                tooltipContent += `<div class="tooltip-info">${stateData.info}</div>`;
               }
             }
           } else {
             tooltipContent += `<p class="tooltip-description">No data available for this state.</p>`;
           }
           
-          // Calculate position for larger tooltip
-          const tooltipWidth = 320; // Match the width in CSS
-          const tooltipHeight = 200; // Approximate height
+          // Calculate position for tooltip
+          const tooltipWidth = 320;
+          const tooltipHeight = 200;
           
-          // Get mouse coordinates
+          // Get mouse coordinates and adjust for window boundaries
           let [mouseX, mouseY] = [event.pageX, event.pageY];
           
-          // Check if we're too close to the right edge of the window
+          // Check if we're too close to the right edge
           if (mouseX + tooltipWidth + 20 > window.innerWidth) {
             mouseX = mouseX - tooltipWidth - 20;
           } else {
             mouseX = mouseX + 15;
           }
           
-          // Check if we're too close to the bottom edge of the window
+          // Check if we're too close to the bottom edge
           if (mouseY + tooltipHeight + 20 > window.innerHeight) {
             mouseY = mouseY - tooltipHeight - 10;
           } else {
@@ -557,29 +547,26 @@ const USMap: React.FC<MapProps> = ({
             .style('left', mouseX + 'px')
             .style('top', mouseY + 'px');
             
-          // Add highlight marker for the state if it's Minnesota-like popup
+          // Add highlight marker for states with data
           if (stateData && (stateData.label || stateData.info)) {
-            // Get the centroid of the state for marker placement
             const centroid = path.centroid(d as any);
             if (centroid && !isNaN(centroid[0]) && !isNaN(centroid[1])) {
-              // Add or move the state marker - with proper type handling
-              // First check if the marker exists
               const existingMarker = svg.select('.state-marker');
               
               if (existingMarker.empty()) {
-                // Create new marker
                 svg.append('circle')
                   .attr('class', 'state-marker')
                   .attr('r', 10)
                   .attr('cx', centroid[0])
                   .attr('cy', centroid[1])
-                  .style('opacity', 1);
+                  .style('fill', stateIcon.color || '#4CAF50')
+                  .style('opacity', 0.2);
               } else {
-                // Update existing marker
                 existingMarker
                   .attr('cx', centroid[0])
                   .attr('cy', centroid[1])
-                  .style('opacity', 1);
+                  .style('fill', stateIcon.color || '#4CAF50')
+                  .style('opacity', 0.2);
               }
             }
           }
@@ -811,5 +798,37 @@ const USMap: React.FC<MapProps> = ({
     </div>
   );
 };
+
+// Add these helper functions near the top of the file
+function formatTooltipItem(text: string): string {
+  // Remove numbers in square brackets
+  let cleanText = text.replace(/\[[0-9,]+\]/g, '').trim();
+  
+  // Remove leading/trailing colons, dashes, or em dashes
+  cleanText = cleanText.replace(/^[:\-—]+|[:\-—]+$/g, '').trim();
+  
+  // Handle bold text (marked with **)
+  const boldMatch = cleanText.match(/\*\*(.*?)\*\*/);
+  if (boldMatch && boldMatch.index !== undefined) {
+    const boldText = boldMatch[1];
+    const beforeText = cleanText.substring(0, boldMatch.index);
+    const afterText = cleanText.substring(boldMatch.index + boldMatch[0].length);
+    return `${beforeText}<strong>${boldText}</strong>${afterText}`;
+  }
+  
+  return cleanText;
+}
+
+function formatValue(value: string | number): string {
+  if (typeof value === 'number') {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(value);
+  }
+  return value;
+}
 
 export default USMap; 

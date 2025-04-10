@@ -234,7 +234,7 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
   }, [notification]);
 
   const generateEmbedCode = () => {
-    const baseUrl = window.location.origin;
+    const baseUrl = 'https://map-generator-umber.vercel.app';
     const responsiveCode = responsive ? 'width="100%" style="min-height:500px"' : `width="${width}" height="${height}"`;
     
     // Build query params including scale customization
@@ -251,7 +251,14 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
     
     const queryString = params.toString() ? `?${params.toString()}` : '';
     
-    return `<iframe src="${baseUrl}/#/embed${queryString}" ${responsiveCode} frameborder="0" allowfullscreen></iframe>`;
+    return `<iframe 
+      src="${baseUrl}/embed${queryString}" 
+      ${responsiveCode} 
+      frameborder="0" 
+      allowfullscreen
+      sandbox="allow-scripts allow-same-origin allow-popups"
+      style="border: none;"
+    ></iframe>`;
   };
   
   const handleCopyCode = () => {
@@ -269,13 +276,19 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
       
       {isLocalhost && (
         <WarningBox>
-          <SectionTitle>⚠️ Local Development Warning</SectionTitle>
-          <p>You're currently running the app locally. The embed code will not work on external sites when referencing localhost.</p>
-          <p>For testing on Shopify or other sites, you should:</p>
+          <SectionTitle>⚠️ Deployment Required</SectionTitle>
+          <p>The embed code will not work on external sites until you deploy this application to a public URL.</p>
+          <p>To make the map work on Shopify:</p>
           <InstructionList>
-            <li>Deploy this application to a public URL, or</li>
-            <li>Enter the public URL where this app will be hosted in the field below.</li>
+            <li>Deploy this application to a public URL (e.g., using Vercel, Netlify, or similar services)</li>
+            <li>Make sure your hosting provider supports HTTPS (required by Shopify)</li>
+            <li>Update the base URL in the embed code to your deployed URL</li>
+            <li>Ensure your hosting provider allows iframe embedding (check CORS and CSP settings)</li>
           </InstructionList>
+          <Note>
+            <strong>Note:</strong> If you're testing locally, the embed code will only work on your local machine.
+            For Shopify integration, you must deploy to a public URL with HTTPS support.
+          </Note>
         </WarningBox>
       )}
       

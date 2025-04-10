@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { HashRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import styled from 'styled-components';
 import USMap from './components/USMap';
 // Import components directly for now
@@ -341,13 +341,13 @@ function MainApp() {
 
 function App() {
   return (
-    <HashRouter>
+    <BrowserRouter>
       <Routes>
         <Route path="/" element={<MainApp />} />
         <Route path="/embed" element={<EmbedPage />} />
         <Route path="/test" element={<TestPage />} />
       </Routes>
-    </HashRouter>
+    </BrowserRouter>
   );
 }
 
