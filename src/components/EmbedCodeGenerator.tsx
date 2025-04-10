@@ -245,7 +245,7 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
     
     // Add map ID if available
     if (mapId) {
-      params.append('mapId', mapId);
+      params.append('id', mapId);
     }
     
     // Add customization parameters
@@ -261,7 +261,7 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
     
     const queryString = params.toString() ? `?${params.toString()}` : '';
     
-    return `<iframe style="aspect-ratio: 16/9; width: 100%;" src="${baseUrl}/embed${queryString}"></iframe>`;
+    return `<iframe src="${baseUrl}/embed${queryString}" width="100%" style="min-height:500px" frameborder="0" allowfullscreen></iframe>`;
   };
   
   const handleCopyCode = () => {
