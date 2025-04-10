@@ -344,7 +344,7 @@ function App() {
     <HashRouter>
       <Routes>
         <Route path="/" element={<MainApp />} />
-        <Route path="/embed/:mapId" element={<EmbedPage />} />
+        <Route path="/embed" element={<EmbedPage />} />
         <Route path="/test" element={<TestPage />} />
       </Routes>
     </HashRouter>
