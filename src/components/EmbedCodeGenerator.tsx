@@ -261,7 +261,16 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
     
     const queryString = params.toString() ? `?${params.toString()}` : '';
     
-    return `<iframe src="${baseUrl}/embed${queryString}" width="100%" style="min-height:500px" frameborder="0" allowfullscreen></iframe>`;
+    // Use a more ad-blocker friendly approach
+    return `<div class="map-container" style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;">
+  <iframe 
+    src="${baseUrl}/embed${queryString}" 
+    style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" 
+    title="US Map Visualization"
+    loading="lazy"
+    referrerpolicy="no-referrer-when-downgrade"
+  ></iframe>
+</div>`;
   };
   
   const handleCopyCode = () => {
