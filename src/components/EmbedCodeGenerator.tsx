@@ -257,7 +257,7 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
       frameborder="0" 
       allowfullscreen
       sandbox="allow-scripts allow-same-origin allow-popups"
-      style="border: none;"
+      style="border: none; width: 100%;"
     ></iframe>`;
   };
   
