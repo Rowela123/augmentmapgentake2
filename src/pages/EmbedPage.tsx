@@ -144,28 +144,7 @@ const EmbedPage: React.FC = () => {
 
   return (
     <EmbedContainer>
-      {/* Debug information */}
-      <div style={{ 
-        position: 'fixed', 
-        top: 0, 
-        left: 0, 
-        background: 'white', 
-        padding: '10px', 
-        border: '1px solid black',
-        zIndex: 9999,
-        fontSize: '12px'
-      }}>
-        <pre>{JSON.stringify({
-          loading,
-          error,
-          dataLength: mapData.length,
-          windowLocation: window.location.href,
-          hasData: !!sideHustleData,
-          parentWindow: window.parent !== window,
-          referrer: document.referrer
-        }, null, 2)}</pre>
-      </div>
-
+      {/* Remove debug information panel */}
       {loading ? (
         <LoadingContainer>
           <div>Loading map...</div>
@@ -187,7 +166,7 @@ const EmbedPage: React.FC = () => {
         />
       ) : (
         <EmptyMessage>
-          No map data available. Debug info above.
+          No map data available.
         </EmptyMessage>
       )}
     </EmbedContainer>

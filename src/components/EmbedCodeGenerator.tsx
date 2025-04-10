@@ -262,38 +262,14 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
     const queryString = params.toString() ? `?${params.toString()}` : '';
     const embedUrl = `${baseUrl}/embed${queryString}`;
     
-    // Shopify-specific embed code using a more compatible approach
-    return `<!-- START US Map Generator Embed -->
-<div id="us-map-container" style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:100%;"></div>
-<script>
-  (function() {
-    // Create iframe
-    var iframe = document.createElement('iframe');
-    iframe.src = "${embedUrl}";
-    iframe.style.position = "absolute";
-    iframe.style.top = "0";
-    iframe.style.left = "0";
-    iframe.style.width = "100%";
-    iframe.style.height = "100%";
-    iframe.style.border = "0";
-    iframe.setAttribute("title", "US Map Visualization");
-    iframe.setAttribute("loading", "lazy");
-    iframe.setAttribute("allow", "fullscreen");
-    
-    // Add iframe to container
-    var container = document.getElementById('us-map-container');
-    if (container) {
-      container.appendChild(iframe);
-    }
-    
-    // Handle error
-    iframe.onerror = function() {
-      this.onerror = null;
-      this.src = "${embedUrl}";
-    };
-  })();
-</script>
-<!-- END US Map Generator Embed -->`;
+    // Simple iframe embed code - most compatible approach for Shopify
+    return `<div style="position:relative;width:100%;height:0;padding-bottom:56.25%;">
+  <iframe src="${embedUrl}" 
+    style="position:absolute;top:0;left:0;width:100%;height:100%;" 
+    frameborder="0"
+    allowfullscreen>
+  </iframe>
+</div>`;
   };
   
   const handleCopyCode = () => {
