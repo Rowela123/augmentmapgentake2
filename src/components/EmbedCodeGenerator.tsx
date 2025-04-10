@@ -254,9 +254,10 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
     if (maxLabel) params.append('maxLabel', maxLabel);
     if (tooltipDescription) params.append('tooltipDescription', tooltipDescription);
     
-    // Get the current URL and remove any existing query parameters
-    const currentUrl = window.location.href.split('?')[0];
-    const baseUrl = currentUrl.endsWith('/') ? currentUrl.slice(0, -1) : currentUrl;
+    // Use production URL when deployed, otherwise use current URL
+    const baseUrl = isLocalhost 
+      ? window.location.href.split('?')[0].replace(/\/$/, '')
+      : 'https://map-generator-umber.vercel.app';
     
     const queryString = params.toString() ? `?${params.toString()}` : '';
     
