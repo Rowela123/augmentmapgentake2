@@ -256,7 +256,7 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
     
     // Use production URL when deployed, otherwise use current URL
     const baseUrl = isLocalhost 
-      ? window.location.href.split('?')[0].replace(/\/$/, '')
+      ? 'http://localhost:3001'
       : 'https://map-generator-umber.vercel.app';
     
     const queryString = params.toString() ? `?${params.toString()}` : '';
