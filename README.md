@@ -84,6 +84,23 @@ The generated embed code will include:
 - Proper attribution with a link back to the original
 - Optional responsive script to adapt the height automatically
 
+### Embedding in Shopify
+
+To embed your map in Shopify:
+
+1. In the US Map Generator, go to the "Get Embed Code" tab
+2. Copy the generated embed code
+3. In your Shopify admin, navigate to the page where you want to embed the map
+4. Click to edit the page
+5. Click the "<>" button to access the HTML editor
+6. Paste the embed code where you want the map to appear
+7. Save the page
+
+**Important Notes for Shopify:**
+- Make sure you're copying the embed code from the deployed version at https://map-generator-umber.vercel.app, not from localhost
+- Do not modify the embed code URL structure - it should be exactly as generated
+- If you're still having issues, try using a Shopify app like "Custom HTML" that's specifically designed for embedding external content
+
 ## Data Format
 
 The generator accepts data in the following formats:

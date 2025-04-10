@@ -260,14 +260,15 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
       : 'https://map-generator-umber.vercel.app';
     
     const queryString = params.toString() ? `?${params.toString()}` : '';
+    // Ensure no hash (#) characters in the URL
     const embedUrl = `${baseUrl}/embed${queryString}`;
     
-    // Simple iframe embed code - most compatible approach for Shopify
+    // Create Shopify-compatible iframe embed code
     return `<div style="position:relative;width:100%;height:0;padding-bottom:56.25%;">
   <iframe src="${embedUrl}" 
     style="position:absolute;top:0;left:0;width:100%;height:100%;" 
     frameborder="0"
-    allowfullscreen>
+    allow="fullscreen">
   </iframe>
 </div>`;
   };
