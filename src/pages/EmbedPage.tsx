@@ -57,82 +57,66 @@ const EmbedPage: React.FC = () => {
 
   useEffect(() => {
     console.log('EmbedPage mounted');
-    document.title = 'US Map Embed';
+    console.log('Window location:', window.location.href);
+    console.log('Sample data available:', !!sideHustleData);
     
     try {
-      // Always use sample data for embedded view
-      console.log('Setting sample data');
+      if (!sideHustleData || !Array.isArray(sideHustleData)) {
+        throw new Error('Sample data is not available or invalid');
+      }
+
+      // Log the structure of sample data
+      console.log('Sample data structure:', {
+        length: sideHustleData.length,
+        firstItem: sideHustleData[0],
+        keys: Object.keys(sideHustleData[0] || {})
+      });
+
       setMapData(sideHustleData);
       setMapTitle('Most Popular Side Hustle in Every US State');
       setLoading(false);
-      
-      // Log the data being used
-      console.log('Map data:', sideHustleData);
     } catch (err) {
       console.error('Error in EmbedPage:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
       setLoading(false);
     }
-    
-    // Send height information to parent window (for iframe resizing)
-    const sendHeightToParent = () => {
-      try {
-        if (window.parent !== window) {
-          const height = document.body.scrollHeight;
-          window.parent.postMessage({ type: 'resize', height }, '*');
-          console.log('Sent height to parent:', height);
-        }
-      } catch (e) {
-        console.error('Error sending height to parent:', e);
-      }
-    };
-    
-    // Create a ResizeObserver to detect content size changes
-    if (typeof ResizeObserver !== 'undefined') {
-      const resizeObserver = new ResizeObserver(() => {
-        sendHeightToParent();
-      });
-      
-      // Observe the body element
-      resizeObserver.observe(document.body);
-      
-      return () => {
-        resizeObserver.disconnect();
-      };
-    } else {
-      // Fallback for browsers without ResizeObserver
-      const timer = setTimeout(sendHeightToParent, 1000);
-      window.addEventListener('resize', sendHeightToParent);
-      
-      return () => {
-        clearTimeout(timer);
-        window.removeEventListener('resize', sendHeightToParent);
-      };
-    }
   }, []);
-  
-  console.log('Rendering EmbedPage', { loading, error, mapData: mapData.length });
-  
-  if (loading) {
-    return (
-      <LoadingContainer>
-        <div>Loading map...</div>
-      </LoadingContainer>
-    );
-  }
-  
-  if (error && !mapData.length) {
-    return (
-      <ErrorContainer>
-        <div>Error: {error}</div>
-        <div>Please try refreshing the page or contact support if the problem persists.</div>
-      </ErrorContainer>
-    );
-  }
-  
+
+  // Add a debug div that will be visible in the iframe
+  const debugInfo = {
+    loading,
+    error,
+    dataLength: mapData.length,
+    windowLocation: window.location.href,
+    hasData: !!sideHustleData
+  };
+
   return (
     <EmbedContainer>
-      {mapData.length > 0 ? (
+      {/* Debug information */}
+      <div style={{ 
+        position: 'fixed', 
+        top: 0, 
+        left: 0, 
+        background: 'white', 
+        padding: '10px', 
+        border: '1px solid black',
+        zIndex: 9999,
+        fontSize: '12px'
+      }}>
+        <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
+      </div>
+
+      {loading ? (
+        <LoadingContainer>
+          <div>Loading map...</div>
+        </LoadingContainer>
+      ) : error ? (
+        <ErrorContainer>
+          <div>Error: {error}</div>
+          <div>Please try refreshing the page or contact support if the problem persists.</div>
+        </ErrorContainer>
+      ) : mapData.length > 0 ? (
         <USMap 
           data={mapData} 
           title={mapTitle} 
@@ -143,7 +127,7 @@ const EmbedPage: React.FC = () => {
         />
       ) : (
         <EmptyMessage>
-          No map data available.
+          No map data available. Debug info above.
         </EmptyMessage>
       )}
     </EmbedContainer>
