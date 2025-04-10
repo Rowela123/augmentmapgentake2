@@ -11,7 +11,7 @@ const setupEmbedHeaders = () => {
   // Add CSP headers to allow embedding from any domain
   const cspMeta = document.createElement('meta');
   cspMeta.httpEquiv = "Content-Security-Policy";
-  cspMeta.content = "frame-ancestors *;";
+  cspMeta.content = "frame-ancestors *; default-src 'self' https://* 'unsafe-inline' 'unsafe-eval' data:; connect-src *;";
   document.head.appendChild(cspMeta);
   
   // Add Access-Control headers
@@ -20,7 +20,19 @@ const setupEmbedHeaders = () => {
   corsHeader.content = "*";
   document.head.appendChild(corsHeader);
   
-  console.log('Embed headers added');
+  // Add X-Frame-Options header to allow embedding in iframes
+  const frameHeader = document.createElement('meta');
+  frameHeader.httpEquiv = "X-Frame-Options";
+  frameHeader.content = "ALLOWALL";
+  document.head.appendChild(frameHeader);
+
+  // Add Shopify specific headers
+  const shopifyHeader = document.createElement('meta');
+  shopifyHeader.name = "shopify-feature";
+  shopifyHeader.content = "iframe-resizer";
+  document.head.appendChild(shopifyHeader);
+  
+  console.log('Embed headers added for Shopify compatibility');
 };
 
 const EmbedContainer = styled.div`
