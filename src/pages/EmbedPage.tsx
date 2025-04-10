@@ -56,76 +56,21 @@ const EmbedPage: React.FC = () => {
   const tooltipDescription = searchParams.get('tooltipDescription') || 'Popular side hustles and their average monthly earnings in';
 
   useEffect(() => {
-    // Set CORS headers for embedding compatibility
+    console.log('EmbedPage mounted');
     document.title = 'US Map Embed';
     
     try {
-      // Get map ID and other parameters from URL
-      const mapId = searchParams.get('id');
-      const title = searchParams.get('title');
-      
-      // Set title if provided
-      if (title) {
-        const decodedTitle = decodeURIComponent(title);
-        setMapTitle(decodedTitle);
-        document.title = `US Map: ${decodedTitle}`;
-      }
-      
-      // If map ID is provided, load that specific map
-      if (mapId) {
-        const map = getMapById(mapId);
-        if (map) {
-          setMapData(map.data);
-          if (!title) {
-            setMapTitle(map.title);
-            document.title = `US Map: ${map.title}`;
-          }
-          setLoading(false);
-        } else {
-          console.error(`Map with ID ${mapId} not found`);
-          // Fall back to sample data instead of showing an error
-          setMapData(sideHustleData);
-          if (!title) {
-            setMapTitle('US Map Sample Data');
-          }
-          setLoading(false);
-        }
-      } else {
-        // If no map ID, try to load the most recent map
-        const savedMaps = getSavedMaps();
-        if (savedMaps.length > 0) {
-          // Sort by last modified date
-          const sortedMaps = [...savedMaps].sort((a, b) => 
-            new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime()
-          );
-          
-          const mostRecentMap = sortedMaps[0];
-          setMapData(mostRecentMap.data);
-          
-          // Only set title if not already set from URL
-          if (!title) {
-            setMapTitle(mostRecentMap.title);
-            document.title = `US Map: ${mostRecentMap.title}`;
-          }
-          
-          setLoading(false);
-        } else {
-          // Fall back to sample data if no saved maps
-          console.log('No saved maps found, using sample data');
-          setMapData(sideHustleData);
-          if (!title) {
-            setMapTitle('Most Popular Side Hustle in Every US State');
-          }
-          setLoading(false);
-        }
-      }
-    } catch (err) {
-      console.error('Error loading map data:', err);
-      // Always show a map, even if there's an error
+      // Always use sample data for embedded view
+      console.log('Setting sample data');
       setMapData(sideHustleData);
-      if (!mapTitle) {
-        setMapTitle('US Map Data');
-      }
+      setMapTitle('Most Popular Side Hustle in Every US State');
+      setLoading(false);
+      
+      // Log the data being used
+      console.log('Map data:', sideHustleData);
+    } catch (err) {
+      console.error('Error in EmbedPage:', err);
+      setError(err instanceof Error ? err.message : 'Unknown error');
       setLoading(false);
     }
     
@@ -156,10 +101,7 @@ const EmbedPage: React.FC = () => {
       };
     } else {
       // Fallback for browsers without ResizeObserver
-      // Send height after the map is rendered
       const timer = setTimeout(sendHeightToParent, 1000);
-      
-      // Also adjust on window resize
       window.addEventListener('resize', sendHeightToParent);
       
       return () => {
@@ -167,7 +109,9 @@ const EmbedPage: React.FC = () => {
         window.removeEventListener('resize', sendHeightToParent);
       };
     }
-  }, [searchParams, mapTitle]);
+  }, []);
+  
+  console.log('Rendering EmbedPage', { loading, error, mapData: mapData.length });
   
   if (loading) {
     return (
