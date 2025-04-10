@@ -260,15 +260,18 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
       : 'https://map-generator-umber.vercel.app';
     
     const queryString = params.toString() ? `?${params.toString()}` : '';
+    const embedUrl = `${baseUrl}/embed${queryString}`;
     
-    // Use a more ad-blocker friendly approach
-    return `<div class="map-container" style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;">
+    return `<div class="map-container" style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:100%;">
   <iframe 
-    src="${baseUrl}/embed${queryString}" 
-    style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" 
+    src="${embedUrl}"
+    style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"
     title="US Map Visualization"
+    sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+    allow="fullscreen"
     loading="lazy"
     referrerpolicy="no-referrer-when-downgrade"
+    onerror="this.onerror=null;this.src='${embedUrl}';"
   ></iframe>
 </div>`;
   };
@@ -293,13 +296,12 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
           <p>To make the map work on Shopify:</p>
           <InstructionList>
             <li>Deploy this application to a public URL (e.g., using Vercel, Netlify, or similar services)</li>
-            <li>Make sure your hosting provider supports HTTPS (required by Shopify)</li>
-            <li>Update the base URL in the embed code to your deployed URL</li>
-            <li>Ensure your hosting provider allows iframe embedding (check CORS and CSP settings)</li>
+            <li>Make sure your deployment is using HTTPS</li>
+            <li>Once deployed, copy the embed code from the deployed version</li>
+            <li>Paste the embed code into your Shopify page's HTML editor</li>
           </InstructionList>
           <Note>
-            <strong>Note:</strong> If you're testing locally, the embed code will only work on your local machine.
-            For Shopify integration, you must deploy to a public URL with HTTPS support.
+            <strong>Note:</strong> Currently, the application is running locally. For Shopify integration, you must deploy to a public URL with HTTPS support.
           </Note>
         </WarningBox>
       )}
