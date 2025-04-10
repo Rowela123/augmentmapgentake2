@@ -211,6 +211,7 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
   const [responsive, setResponsive] = useState<boolean>(true);
   const [copied, setCopied] = useState<boolean>(false);
   const [notification, setNotification] = useState<string | null>(null);
+  const [embedCode, setEmbedCode] = useState<string>('');
   
   // Scale customization
   const [scaleTitle, setScaleTitle] = useState<string>('');
@@ -233,20 +234,29 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
     }
   }, [notification]);
 
+  // Update embed code whenever relevant state changes
+  useEffect(() => {
+    const newEmbedCode = generateEmbedCode();
+    setEmbedCode(newEmbedCode);
+  }, [mapId, scaleTitle, minLabel, maxLabel, tooltipDescription]);
+
   const generateEmbedCode = () => {
-    const baseUrl = 'https://map-generator-umber.vercel.app';
-    
-    // Build query params including scale customization
     const params = new URLSearchParams();
     
-    // Only add params if they're not empty
-    if (mapId) params.append('id', mapId);
+    // Add map ID if available
+    if (mapId) {
+      params.append('mapId', mapId);
+    }
+    
+    // Add customization parameters
     if (scaleTitle) params.append('scaleTitle', scaleTitle);
     if (minLabel) params.append('minLabel', minLabel);
     if (maxLabel) params.append('maxLabel', maxLabel);
-    if (tooltipDescription !== 'Popular side hustles and their average monthly earnings in') {
-      params.append('tooltipDescription', tooltipDescription);
-    }
+    if (tooltipDescription) params.append('tooltipDescription', tooltipDescription);
+    
+    // Get the current URL and remove any existing query parameters
+    const currentUrl = window.location.href.split('?')[0];
+    const baseUrl = currentUrl.endsWith('/') ? currentUrl.slice(0, -1) : currentUrl;
     
     const queryString = params.toString() ? `?${params.toString()}` : '';
     
@@ -254,7 +264,7 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
   };
   
   const handleCopyCode = () => {
-    navigator.clipboard.writeText(generateEmbedCode());
+    navigator.clipboard.writeText(embedCode);
     setNotification('Embed code copied to clipboard!');
   };
 
@@ -371,7 +381,7 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
         <SectionTitle>Your Embed Code</SectionTitle>
         <p>Copy and paste this code into your website to display the map:</p>
         <CodeBox 
-          value={generateEmbedCode()} 
+          value={embedCode} 
           readOnly
           onClick={handleSelectCode}
         />
