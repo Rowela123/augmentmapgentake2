@@ -1,0 +1,51 @@
+{
+  "name": "us-map-generator",
+  "version": "1.0.0",
+  "description": "Interactive US Map Generator with embedding capabilities",
+  "main": "index.js",
+  "scripts": {
+    "start": "set BROWSER=chrome&&react-scripts start",
+    "start:firefox": "set BROWSER=firefox&&react-scripts start",
+    "start:edge": "set BROWSER=edge&&react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "dependencies": {
+    "@types/react-router-dom": "^5.3.3",
+    "@types/styled-components": "^5.1.34",
+    "d3": "^7.9.0",
+    "d3-geo": "^3.1.1",
+    "papaparse": "^5.5.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "6.20.0",
+    "react-scripts": "^5.0.1",
+    "styled-components": "^5.3.11",
+    "topojson-client": "^3.1.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/d3": "^7.4.3",
+    "@types/papaparse": "^5.3.15",
+    "@types/react": "^18.3.20",
+    "@types/react-dom": "^18.3.5",
+    "@types/topojson-client": "^3.1.5",
+    "typescript": "^4.9.5"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
