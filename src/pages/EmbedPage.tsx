@@ -6,12 +6,21 @@ import { StateData } from '../types';
 import { getSavedMaps, getMapById } from '../utils/storageUtils';
 import { sideHustleData } from '../data/sampleData';
 
-// Add debug headers
-const addDebugHeaders = () => {
-  const meta = document.createElement('meta');
-  meta.httpEquiv = "Content-Security-Policy";
-  meta.content = "frame-ancestors *;";
-  document.head.appendChild(meta);
+// Add CORS and frame-ancestors headers for embedding
+const setupEmbedHeaders = () => {
+  // Add CSP headers to allow embedding from any domain
+  const cspMeta = document.createElement('meta');
+  cspMeta.httpEquiv = "Content-Security-Policy";
+  cspMeta.content = "frame-ancestors *;";
+  document.head.appendChild(cspMeta);
+  
+  // Add Access-Control headers
+  const corsHeader = document.createElement('meta');
+  corsHeader.httpEquiv = "Access-Control-Allow-Origin";
+  corsHeader.content = "*";
+  document.head.appendChild(corsHeader);
+  
+  console.log('Embed headers added');
 };
 
 const EmbedContainer = styled.div`
@@ -22,6 +31,7 @@ const EmbedContainer = styled.div`
   height: 100%;
   background: white;
   min-height: 500px;
+  border: none;
 `;
 
 const LoadingContainer = styled.div`
@@ -64,19 +74,41 @@ const EmbedPage: React.FC = () => {
   const maxLabel = searchParams.get('maxLabel') || 'High';
   const scaleTitle = searchParams.get('scaleTitle') || '';
   const tooltipDescription = searchParams.get('tooltipDescription') || 'Popular side hustles and their average monthly earnings in';
+  
+  // Get map ID from URL parameters
+  const mapId = searchParams.get('id');
 
   useEffect(() => {
-    // Add CSP headers
-    const meta = document.createElement('meta');
-    meta.httpEquiv = "Content-Security-Policy";
-    meta.content = "frame-ancestors *;";
-    document.head.appendChild(meta);
+    // Setup headers for embedding
+    setupEmbedHeaders();
     
-    console.log('EmbedPage mounted');
-    console.log('Window location:', window.location.href);
-    console.log('Sample data available:', !!sideHustleData);
+    console.log('EmbedPage mounted, params:', {
+      mapId,
+      minLabel,
+      maxLabel,
+      scaleTitle,
+      tooltipDescription
+    });
     
     try {
+      // If a specific map ID is provided, try to load that map
+      if (mapId) {
+        console.log('Attempting to load map with ID:', mapId);
+        const savedMap = getMapById(mapId);
+        
+        if (savedMap && savedMap.data) {
+          console.log('Found saved map:', savedMap.title);
+          setMapData(savedMap.data);
+          setMapTitle(savedMap.title);
+          setLoading(false);
+          return;
+        } else {
+          console.warn('Map ID provided but map not found, falling back to sample data');
+        }
+      }
+      
+      // Fallback to sample data if no map ID or map not found
+      console.log('Using sample data');
       if (!sideHustleData || !Array.isArray(sideHustleData)) {
         throw new Error('Sample data is not available or invalid');
       }
@@ -96,18 +128,7 @@ const EmbedPage: React.FC = () => {
       setError(err instanceof Error ? err.message : 'Unknown error');
       setLoading(false);
     }
-  }, []);
-
-  // Add a debug div that will be visible in the iframe
-  const debugInfo = {
-    loading,
-    error,
-    dataLength: mapData.length,
-    windowLocation: window.location.href,
-    hasData: !!sideHustleData,
-    parentWindow: window.parent !== window,
-    referrer: document.referrer
-  };
+  }, [mapId, minLabel, maxLabel, scaleTitle, tooltipDescription]);
 
   return (
     <EmbedContainer>
@@ -122,7 +143,15 @@ const EmbedPage: React.FC = () => {
         zIndex: 9999,
         fontSize: '12px'
       }}>
-        <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
+        <pre>{JSON.stringify({
+          loading,
+          error,
+          dataLength: mapData.length,
+          windowLocation: window.location.href,
+          hasData: !!sideHustleData,
+          parentWindow: window.parent !== window,
+          referrer: document.referrer
+        }, null, 2)}</pre>
       </div>
 
       {loading ? (
@@ -142,6 +171,7 @@ const EmbedPage: React.FC = () => {
           minLabel={minLabel}
           maxLabel={maxLabel}
           tooltipDescription={tooltipDescription}
+          embedded={true}
         />
       ) : (
         <EmptyMessage>

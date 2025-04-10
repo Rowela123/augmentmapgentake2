@@ -312,7 +312,8 @@ const USMap: React.FC<MapProps> = ({
   scaleTitle = '',
   minLabel = '',
   maxLabel = '',
-  tooltipDescription = 'Popular side hustles and their average monthly earnings in' 
+  tooltipDescription = 'Popular side hustles and their average monthly earnings in',
+  embedded = false
 }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
@@ -710,12 +711,15 @@ const USMap: React.FC<MapProps> = ({
         .style('font-size', '20px')
         .style('font-weight', 'bold')
         .text(title);
-    } catch (err) {
-      console.error('Error rendering map:', err);
-      setError('Error rendering map. Please try again.');
-    }
 
-  }, [usaData, data, title, width, height, colorScheme, stateDataMap]);
+      // If embedded, send a message to the parent window when map is loaded
+      if (embedded && window.parent !== window) {
+        window.parent.postMessage({ type: 'MAP_LOADED', success: true }, '*');
+      }
+    } catch (error) {
+      console.error("Error rendering map:", error);
+    }
+  }, [usaData, data, title, width, height, colorScheme, selectedColorScheme, stateDataMap, embedded, tooltipDescription]);
 
   if (loading) {
     return <div>Loading map data...</div>;

@@ -74,6 +74,7 @@ export interface MapProps {
   minLabel?: string;
   maxLabel?: string;
   tooltipDescription?: string;
+  embedded?: boolean;
 }
 
 export interface MapStyleOptions {
