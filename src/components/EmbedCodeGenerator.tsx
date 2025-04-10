@@ -251,14 +251,18 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
     
     const queryString = params.toString() ? `?${params.toString()}` : '';
     
-    return `<iframe 
-      src="${baseUrl}/embed${queryString}" 
-      ${responsiveCode} 
-      frameborder="0" 
-      allowfullscreen
-      sandbox="allow-scripts allow-same-origin allow-popups"
-      style="border: none; width: 100%;"
-    ></iframe>`;
+    return `<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%;">
+      <iframe 
+        src="${baseUrl}/embed${queryString}" 
+        ${responsiveCode} 
+        frameborder="0" 
+        allowfullscreen
+        sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
+        loading="lazy"
+        referrerpolicy="origin"
+      ></iframe>
+    </div>`;
   };
   
   const handleCopyCode = () => {

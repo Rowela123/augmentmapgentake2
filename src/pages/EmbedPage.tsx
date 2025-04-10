@@ -6,12 +6,21 @@ import { StateData } from '../types';
 import { getSavedMaps, getMapById } from '../utils/storageUtils';
 import { sideHustleData } from '../data/sampleData';
 
+// Add debug headers
+const addDebugHeaders = () => {
+  const meta = document.createElement('meta');
+  meta.httpEquiv = "Content-Security-Policy";
+  meta.content = "frame-ancestors *;";
+  document.head.appendChild(meta);
+};
+
 const EmbedContainer = styled.div`
   padding: 0;
   margin: 0;
   overflow: hidden;
   width: 100%;
   height: 100%;
+  background: white;
 `;
 
 const LoadingContainer = styled.div`
@@ -56,6 +65,9 @@ const EmbedPage: React.FC = () => {
   const tooltipDescription = searchParams.get('tooltipDescription') || 'Popular side hustles and their average monthly earnings in';
 
   useEffect(() => {
+    // Add debug headers
+    addDebugHeaders();
+    
     console.log('EmbedPage mounted');
     console.log('Window location:', window.location.href);
     console.log('Sample data available:', !!sideHustleData);
@@ -88,7 +100,9 @@ const EmbedPage: React.FC = () => {
     error,
     dataLength: mapData.length,
     windowLocation: window.location.href,
-    hasData: !!sideHustleData
+    hasData: !!sideHustleData,
+    parentWindow: window.parent !== window,
+    referrer: document.referrer
   };
 
   return (
