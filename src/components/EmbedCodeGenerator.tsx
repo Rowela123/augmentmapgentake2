@@ -263,14 +263,8 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
     // Ensure no hash (#) characters in the URL
     const embedUrl = `${baseUrl}/embed${queryString}`;
     
-    // Create Shopify-compatible iframe embed code
-    return `<div style="position:relative;width:100%;height:0;padding-bottom:56.25%;">
-  <iframe src="${embedUrl}" 
-    style="position:absolute;top:0;left:0;width:100%;height:100%;" 
-    frameborder="0"
-    allow="fullscreen">
-  </iframe>
-</div>`;
+    // Simple, Shopify-compatible iframe code with no extra attributes
+    return `<iframe style="aspect-ratio: 16/9; width: 100%;" src="${embedUrl}"></iframe>`;
   };
   
   const handleCopyCode = () => {
