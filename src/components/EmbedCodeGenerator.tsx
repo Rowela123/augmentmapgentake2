@@ -292,46 +292,69 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
     try {
       // Build the URL with all necessary parameters
       const params = new URLSearchParams();
+      let mapData = null;
       
-      // Include the mapId if available
-      if (mapId) {
-        // When we have a mapId, just use that for a shorter URL
-        console.log('Using mapId for embed code:', mapId);
-        params.append('id', mapId);
-        
-        // Only add these parameters if they're customized
-        if (scaleTitle) params.append('scaleTitle', scaleTitle);
-        if (minLabel && minLabel !== 'Low') params.append('minLabel', minLabel);
-        if (maxLabel && maxLabel !== 'High') params.append('maxLabel', maxLabel);
-      } 
-      // If no mapId but we have stateData, use that
-      else if (stateData && stateData.length > 0) {
-        console.log('No mapId but using provided stateData:', stateData.length, 'states');
-        // Safely encode the data, handling Unicode characters
-        const jsonString = JSON.stringify(stateData);
-        const compressedData = btoa(unescape(encodeURIComponent(jsonString)));
-        params.append('data', compressedData);
-        params.append('title', title || '');
-        console.log('Added data parameter with length:', compressedData.length);
-        
-        if (scaleTitle) params.append('scaleTitle', scaleTitle);
-        if (minLabel) params.append('minLabel', minLabel);
-        if (maxLabel) params.append('maxLabel', maxLabel);
-      }
-      else {
+      // Try to get map data either from props or localStorage
+      if (stateData && stateData.length > 0) {
+        // Use provided stateData directly
+        mapData = stateData;
+        console.log('Using provided stateData:', stateData.length, 'states');
+      } else if (mapId) {
+        // Get map data from localStorage
+        const savedMap = getMapById(mapId);
+        if (savedMap && savedMap.data && savedMap.data.length > 0) {
+          mapData = savedMap.data;
+          console.log('Using map data from localStorage:', savedMap.data.length, 'states');
+        } else {
+          console.error('No map data found for mapId:', mapId);
+          return 'Error: No map data found. Please create a map first.';
+        }
+      } else {
         console.warn('No mapId or stateData provided to generateEmbedCode');
         return 'Error: No map data available. Please create a map first.';
       }
       
-      // Get the current domain
-      const baseUrl = window.location.origin;
-      const queryString = params.toString() ? `?${params.toString()}` : '';
-      const embedUrl = `${baseUrl}/embed${queryString}`;
-      
-      console.log("Generated embed URL:", embedUrl);
-      
-      // Return a simple iframe code that works in Shopify
-      return `<iframe src="${embedUrl}" width="100%" height="500" frameborder="0" allowfullscreen></iframe>`;
+      // Always include the map data in the URL to ensure it works when embedded on external sites
+      if (mapData) {
+        // Safely encode the data, handling Unicode characters
+        const jsonString = JSON.stringify(mapData);
+        const compressedData = btoa(unescape(encodeURIComponent(jsonString)));
+        params.append('data', compressedData);
+        
+        // Include the mapId for reference if available
+        if (mapId) {
+          params.append('id', mapId);
+        }
+        
+        // Include the title if available
+        if (mapId) {
+          const savedMap = getMapById(mapId);
+          if (savedMap && savedMap.title) {
+            params.append('title', savedMap.title);
+          } else if (title) {
+            params.append('title', title);
+          }
+        } else if (title) {
+          params.append('title', title);
+        }
+        
+        // Add the customization parameters
+        if (scaleTitle) params.append('scaleTitle', scaleTitle);
+        if (minLabel) params.append('minLabel', minLabel);
+        if (maxLabel) params.append('maxLabel', maxLabel);
+        
+        // Get the current domain
+        const baseUrl = window.location.origin;
+        const queryString = params.toString() ? `?${params.toString()}` : '';
+        const embedUrl = `${baseUrl}/embed${queryString}`;
+        
+        console.log("Generated embed URL with data included");
+        
+        // Return a simple iframe code that works in Shopify
+        return `<iframe src="${embedUrl}" width="100%" height="500" frameborder="0" allowfullscreen></iframe>`;
+      } else {
+        return 'Error: Could not generate embed code. No map data available.';
+      }
     } catch (error) {
       console.error("Error generating embed code:", error);
       return 'Error generating embed code. Please try again.';
