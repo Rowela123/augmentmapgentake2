@@ -393,7 +393,7 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
       const shortId = generateShortId();
       setServerMapId(shortId);
       
-      // Store data in sessionStorage using the shortId
+      // Store data in localStorage using the shortId
       const compactData = btoa(unescape(encodeURIComponent(JSON.stringify({
         id: shortId,
         title: title || 'US Map',
@@ -403,13 +403,12 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
         data: stateData
       }))));
       
-      // Store in both localStorage and sessionStorage for better persistence
-      sessionStorage.setItem(`map_${shortId}`, compactData);
+      // Store in localStorage for the columnsEmbed.html page to access
       localStorage.setItem(`map_${shortId}`, compactData);
       
-      // Create the embed code with a clean path like columns.ai
+      // Create the embed code with a direct path to the standalone HTML file
       const baseUrl = window.location.origin;
-      const embedUrl = `${baseUrl}/map/${shortId}`;
+      const embedUrl = `${baseUrl}/columnsEmbed.html/${shortId}`;
       
       // Create an iframe with aspect-ratio styling exactly like Columns.ai
       const newEmbedCode = `<iframe style="aspect-ratio: 16/9; width: 100%;" src="${embedUrl}" frameborder="0" allowfullscreen></iframe>`;

@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="frame-ancestors *;">
+  <meta http-equiv="Access-Control-Allow-Origin" content="*">
+  <title>US Map Embed</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+    
+    #map-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: #fff;
+    }
+    
+    /* Styles for the actual map visualization */
+    .states {
+      fill: #e0e0e0;
+      stroke: #fff;
+      stroke-width: 1px;
+    }
+    
+    .state:hover {
+      opacity: 0.8;
+    }
+    
+    .tooltip {
+      position: absolute;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      pointer-events: none;
+      font-size: 14px;
+      max-width: 200px;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    
+    .tooltip-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 5px;
+    }
+    
+    .tooltip-value {
+      margin-top: 3px;
+    }
+    
+    .legend {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(255,255,255,0.9);
+      padding: 10px;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .legend-title {
+      font-weight: bold;
+      font-size: 12px;
+      margin-bottom: 5px;
+      text-align: center;
+    }
+    
+    .legend-scale {
+      height: 10px;
+      width: 150px;
+      display: flex;
+      margin-bottom: 5px;
+    }
+    
+    .legend-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #555;
+    }
+    
+    .loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #3498db;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div id="map-container">
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>Loading map...</p>
+    </div>
+  </div>
+
+  <!-- Load D3.js and TopoJSON from CDN -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://unpkg.com/topojson-client@3"></script>
+  
+  <script>
+    // Get map ID from the URL path (last segment) or from hash or query parameters
+    const getMapId = () => {
+      // Check for ID in the URL path
+      const path = window.location.pathname;
+      const segments = path.split('/');
+      let mapId = segments[segments.length - 1];
+      
+      // If the last segment is 'columnsEmbed.html', check for segment after it
+      if (mapId === 'columnsEmbed.html' && segments.length > 1) {
+        mapId = segments[segments.length - 2];
+      }
+      
+      // If no valid ID in path, check hash fragment
+      if (!mapId || mapId === 'columnsEmbed.html') {
+        const hash = window.location.hash;
+        if (hash && hash.length > 1) {
+          mapId = hash.substring(1); // Remove the # character
+        }
+      }
+      
+      // If still no valid ID, check query parameters
+      if (!mapId || mapId === 'columnsEmbed.html') {
+        const urlParams = new URLSearchParams(window.location.search);
+        mapId = urlParams.get('id');
+      }
+      
+      return mapId;
+    };
+    
+    // For this example, we'll use sample data if no data is provided in localStorage
+    const getSampleData = () => {
+      return [
+        { stateCode: "CA", stateName: "California", value: 3.02, label: "Rank 3rd", info: "Population growth: 48% decrease from 12.4% to 6.4% between 2014 and 2023", color: "Green" },
+        { stateCode: "TX", stateName: "Texas", value: 33.11, label: "Rank 18th", info: "Food insecurity: 21% increase from 14.0% to 16.9% between 2015-2017 and 2021-2023", color: "Orange" },
+        { stateCode: "FL", stateName: "Florida", value: 42.85, label: "Rank 25th", info: "Tourism: 19% decrease from 15.6% to 12.6% between 2013 and 2023", color: "Orange" },
+        { stateCode: "NY", stateName: "New York", value: 9.0, label: "Rank 8th", info: "Smoking: 49% decrease from 18.1% to 9.3% of adults between 2011 and 2023", color: "Green" }
+      ];
+    };
+    
+    // Function to render the map
+    const renderMap = (mapData, options = {}) => {
+      const container = document.getElementById('map-container');
+      container.innerHTML = ''; // Clear any loading indicator
+      
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      const margin = { top: 20, right: 20, bottom: 20, left: 20 };
+      
+      // Create the SVG container
+      const svg = d3.select(container)
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("viewBox", [0, 0, width, height])
+        .attr("style", "max-width: 100%; height: auto;");
+      
+      // Create tooltip div
+      const tooltip = d3.select(container)
+        .append("div")
+        .attr("class", "tooltip")
+        .style("opacity", 0);
+        
+      // Define color scale
+      const colorScale = d3.scaleLinear()
+        .domain([0, 50, 100])
+        .range(["#27ae60", "#f39c12", "#e74c3c"]);
+      
+      // Create a US map projection
+      const projection = d3.geoAlbersUsa()
+        .translate([width / 2, height / 2])
+        .scale(width);
+      
+      const path = d3.geoPath().projection(projection);
+      
+      // Load US TopoJSON data
+      d3.json("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json").then(us => {
+        const states = topojson.feature(us, us.objects.states).features;
+        
+        // Create a map of state names to FIPS codes
+        const stateFips = new Map(states.map(d => [d.properties.name, d.id]));
+        
+        // Create a map of FIPS codes to state data
+        const stateCodeToFips = {
+          "AL": "01", "AK": "02", "AZ": "04", "AR": "05", "CA": "06", "CO": "08", "CT": "09",
+          "DE": "10", "FL": "12", "GA": "13", "HI": "15", "ID": "16", "IL": "17", "IN": "18",
+          "IA": "19", "KS": "20", "KY": "21", "LA": "22", "ME": "23", "MD": "24", "MA": "25",
+          "MI": "26", "MN": "27", "MS": "28", "MO": "29", "MT": "30", "NE": "31", "NV": "32",
+          "NH": "33", "NJ": "34", "NM": "35", "NY": "36", "NC": "37", "ND": "38", "OH": "39",
+          "OK": "40", "OR": "41", "PA": "42", "RI": "44", "SC": "45", "SD": "46", "TN": "47",
+          "TX": "48", "UT": "49", "VT": "50", "VA": "51", "WA": "53", "WV": "54", "WI": "55",
+          "WY": "56", "DC": "11"
+        };
+        
+        // Draw the states
+        svg.append("g")
+          .selectAll("path")
+          .data(states)
+          .join("path")
+          .attr("class", "state")
+          .attr("fill", d => {
+            const fips = d.id;
+            // Find the state code from FIPS
+            const stateCode = Object.keys(stateCodeToFips).find(key => stateCodeToFips[key] === fips);
+            const stateData = mapData.find(s => s.stateCode === stateCode);
+            return stateData ? colorScale(stateData.value) : "#e0e0e0";
+          })
+          .attr("d", path)
+          .attr("stroke", "#fff")
+          .attr("stroke-width", 0.5)
+          .on("mouseover", function(event, d) {
+            const fips = d.id;
+            const stateCode = Object.keys(stateCodeToFips).find(key => stateCodeToFips[key] === fips);
+            const stateData = mapData.find(s => s.stateCode === stateCode);
+            
+            if (stateData) {
+              tooltip.transition()
+                .duration(200)
+                .style("opacity", 0.9);
+              
+              tooltip.html(`
+                <div class="tooltip-title">${stateData.stateName}</div>
+                <div class="tooltip-value">${stateData.label}</div>
+                <div class="tooltip-info">${stateData.info}</div>
+              `)
+                .style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 28) + "px");
+            }
+          })
+          .on("mouseout", function() {
+            tooltip.transition()
+              .duration(500)
+              .style("opacity", 0);
+          });
+          
+        // Add legend
+        const legend = svg.append("g")
+          .attr("class", "legend")
+          .attr("transform", `translate(${width - 170}, ${height - 60})`);
+          
+        // Background for legend
+        legend.append("rect")
+          .attr("width", 150)
+          .attr("height", 50)
+          .attr("fill", "white")
+          .attr("opacity", 0.8)
+          .attr("rx", 4);
+          
+        // Title
+        legend.append("text")
+          .attr("class", "legend-title")
+          .attr("x", 75)
+          .attr("y", 15)
+          .attr("text-anchor", "middle")
+          .text(options.scaleTitle || "Value Scale");
+          
+        // Create the gradient for the legend
+        const defs = svg.append("defs");
+        const gradient = defs.append("linearGradient")
+          .attr("id", "legend-gradient")
+          .attr("x1", "0%")
+          .attr("y1", "0%")
+          .attr("x2", "100%")
+          .attr("y2", "0%");
+          
+        gradient.append("stop")
+          .attr("offset", "0%")
+          .attr("stop-color", colorScale(0));
+          
+        gradient.append("stop")
+          .attr("offset", "50%")
+          .attr("stop-color", colorScale(50));
+          
+        gradient.append("stop")
+          .attr("offset", "100%")
+          .attr("stop-color", colorScale(100));
+          
+        // Draw the colored rectangle
+        legend.append("rect")
+          .attr("x", 10)
+          .attr("y", 20)
+          .attr("width", 130)
+          .attr("height", 10)
+          .style("fill", "url(#legend-gradient)");
+          
+        // Add min and max labels
+        legend.append("text")
+          .attr("x", 10)
+          .attr("y", 45)
+          .attr("text-anchor", "start")
+          .attr("font-size", "10px")
+          .text(options.minLabel || "Low");
+          
+        legend.append("text")
+          .attr("x", 140)
+          .attr("y", 45)
+          .attr("text-anchor", "end")
+          .attr("font-size", "10px")
+          .text(options.maxLabel || "High");
+      });
+    };
+    
+    // Main function to initialize the map
+    const initMap = () => {
+      const mapId = getMapId();
+      console.log("Loading map with ID:", mapId);
+      
+      // Try to get map data from localStorage
+      try {
+        let mapData = [];
+        let options = {
+          scaleTitle: "",
+          minLabel: "Low",
+          maxLabel: "High"
+        };
+        
+        const storedData = localStorage.getItem(`map_${mapId}`);
+        if (storedData) {
+          console.log("Found data in localStorage");
+          const decodedData = decodeURIComponent(escape(atob(storedData)));
+          const parsedData = JSON.parse(decodedData);
+          
+          if (parsedData && parsedData.data) {
+            mapData = parsedData.data;
+            options.scaleTitle = parsedData.scale || "";
+            options.minLabel = parsedData.min || "Low";
+            options.maxLabel = parsedData.max || "High";
+          }
+        } else {
+          console.log("No data found in localStorage, using sample data");
+          mapData = getSampleData();
+        }
+        
+        // Render the map with the data
+        renderMap(mapData, options);
+      } catch (error) {
+        console.error("Error loading map data:", error);
+        document.getElementById('map-container').innerHTML = 
+          '<div style="padding: 20px; text-align: center;">Error loading map data</div>';
+      }
+    };
+    
+    // Initialize when the page is loaded
+    window.addEventListener('DOMContentLoaded', initMap);
+    
+    // Handle window resize
+    window.addEventListener('resize', () => {
+      // Simple debounce
+      if (window.resizeTimer) {
+        clearTimeout(window.resizeTimer);
+      }
+      window.resizeTimer = setTimeout(initMap, 250);
+    });
+  </script>
+</body>
+</html> 
