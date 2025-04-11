@@ -243,7 +243,25 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
   const generateEmbedCode = () => {
     // Build the URL with all necessary parameters
     const params = new URLSearchParams();
-    if (mapId) params.append('id', mapId);
+    
+    // Include the mapId
+    if (mapId) {
+      params.append('id', mapId);
+      
+      // Get the actual map data to include directly in the URL
+      try {
+        const mapData = getMapById(mapId);
+        if (mapData && mapData.data) {
+          // Compress the data to keep the URL shorter
+          const compressedData = btoa(JSON.stringify(mapData.data));
+          params.append('data', compressedData);
+          params.append('title', mapData.title || '');
+        }
+      } catch (error) {
+        console.error("Error getting map data:", error);
+      }
+    }
+    
     if (scaleTitle) params.append('scaleTitle', scaleTitle);
     if (minLabel) params.append('minLabel', minLabel);
     if (maxLabel) params.append('maxLabel', maxLabel);

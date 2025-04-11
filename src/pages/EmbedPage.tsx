@@ -83,8 +83,28 @@ const EmbedPage: React.FC = () => {
     if (tabs) (tabs as HTMLElement).style.display = 'none';
     
     try {
-      // TEMPORARY FIX: Always use sample data for embeds
-      // This ensures the map shows up in Shopify without localStorage dependency
+      // Try to get data from URL parameters first
+      const dataParam = searchParams.get('data');
+      const titleParam = searchParams.get('title');
+      
+      if (dataParam) {
+        try {
+          // Decode the base64-encoded data
+          const jsonData = atob(dataParam);
+          const parsedData = JSON.parse(jsonData);
+          
+          if (Array.isArray(parsedData) && parsedData.length > 0) {
+            setMapData(parsedData);
+            setMapTitle(titleParam || '');
+            setLoading(false);
+            return;
+          }
+        } catch (error) {
+          console.error("Error parsing data from URL:", error);
+        }
+      }
+      
+      // Fallback to sample data if URL doesn't contain map data
       setMapData(sideHustleData);
       setMapTitle('US States Data Visualization');
       setLoading(false);
@@ -93,7 +113,7 @@ const EmbedPage: React.FC = () => {
       setError('Failed to load map data');
       setLoading(false);
     }
-  }, []);
+  }, [searchParams]);
 
   // Render ONLY the map component with fullscreen styles
   return (
