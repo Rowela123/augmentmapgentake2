@@ -98,20 +98,28 @@ const EmbedPage: React.FC = () => {
       
       if (dataParam) {
         try {
-          // Decode the base64-encoded data
-          const jsonData = atob(dataParam);
-          console.log('Decoded data from URL (first 100 chars):', jsonData.substring(0, 100));
-          const parsedData = JSON.parse(jsonData);
+          // Decode the base64-encoded data with Unicode support
+          const base64Data = dataParam;
+          const decodedData = decodeURIComponent(escape(atob(base64Data)));
+          console.log('Decoded data from URL (first 100 chars):', decodedData.substring(0, 100));
           
-          if (Array.isArray(parsedData) && parsedData.length > 0) {
-            console.log(`Successfully parsed data from URL: ${parsedData.length} states`);
-            setMapData(parsedData);
-            setMapTitle(titleParam || '');
-            setLoading(false);
-            return;
+          try {
+            const parsedData = JSON.parse(decodedData);
+            
+            if (Array.isArray(parsedData) && parsedData.length > 0) {
+              console.log(`Successfully parsed data from URL: ${parsedData.length} states`);
+              setMapData(parsedData);
+              setMapTitle(titleParam || '');
+              setLoading(false);
+              return;
+            } else {
+              console.error("Parsed data is not an array or is empty");
+            }
+          } catch (parseError) {
+            console.error("JSON parse error:", parseError);
           }
         } catch (error) {
-          console.error("Error parsing data from URL:", error);
+          console.error("Error decoding data from URL:", error);
         }
       }
       

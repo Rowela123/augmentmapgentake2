@@ -302,8 +302,9 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
           // If we have stateData directly, use that
           if (stateData && stateData.length > 0) {
             console.log('Using provided stateData:', stateData.length, 'states');
-            // Compress the data to keep the URL shorter
-            const compressedData = btoa(JSON.stringify(stateData));
+            // Safely encode the data, handling Unicode characters
+            const jsonString = JSON.stringify(stateData);
+            const compressedData = btoa(unescape(encodeURIComponent(jsonString)));
             params.append('data', compressedData);
             params.append('title', title || '');
             console.log('Added data parameter with length:', compressedData.length);
@@ -313,8 +314,9 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
             const mapData = getMapById(mapId);
             console.log('Retrieved map data from localStorage:', mapData);
             if (mapData && mapData.data) {
-              // Compress the data to keep the URL shorter
-              const compressedData = btoa(JSON.stringify(mapData.data));
+              // Safely encode the data, handling Unicode characters
+              const jsonString = JSON.stringify(mapData.data);
+              const compressedData = btoa(unescape(encodeURIComponent(jsonString)));
               params.append('data', compressedData);
               params.append('title', mapData.title || '');
               console.log('Added data parameter with length:', compressedData.length);
@@ -331,7 +333,9 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
       // If no mapId but we have stateData, use that
       else if (stateData && stateData.length > 0) {
         console.log('No mapId but using provided stateData:', stateData.length, 'states');
-        const compressedData = btoa(JSON.stringify(stateData));
+        // Safely encode the data, handling Unicode characters
+        const jsonString = JSON.stringify(stateData);
+        const compressedData = btoa(unescape(encodeURIComponent(jsonString)));
         params.append('data', compressedData);
         params.append('title', title || '');
         console.log('Added data parameter with length:', compressedData.length);

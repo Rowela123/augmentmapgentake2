@@ -323,11 +323,17 @@ function MainApp() {
         )}
         {activeTab === 'embed' && (
           <>
-            {console.log('Rendering EmbedCodeGenerator with:', { 
-              mapId: currentMapId || '', 
-              title: mapTitle,
-              stateDataLength: stateData?.length || 0 
-            })}
+            {/* Debug info */}
+            <div style={{ display: 'none' }}>
+              {(() => { 
+                console.log('Rendering EmbedCodeGenerator with:', { 
+                  mapId: currentMapId || '', 
+                  title: mapTitle,
+                  stateDataLength: stateData?.length || 0 
+                });
+                return null;
+              })()}
+            </div>
             <EmbedCodeGenerator
               title={mapTitle}
               mapId={currentMapId || ''}
