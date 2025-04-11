@@ -295,11 +295,15 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
     if (minLabel) params.append('minLabel', minLabel);
     if (maxLabel) params.append('maxLabel', maxLabel);
     
+    // Get the current domain
+    const baseUrl = window.location.origin;
     const queryString = params.toString() ? `?${params.toString()}` : '';
-    const embedUrl = `https://map-generator-take2.vercel.app/embed${queryString}`;
+    const embedUrl = `${baseUrl}/embed${queryString}`;
     
-    console.log("Generated embed code with mapId:", mapId, "and stateData length:", stateData?.length || 0);
-    return `<iframe src="${embedUrl}" width="100%" style="min-height:500px" frameborder="0" allowfullscreen></iframe>`;
+    console.log("Generated embed URL:", embedUrl);
+    
+    // Return a simple iframe code that works in Shopify
+    return `<iframe src="${embedUrl}" width="100%" height="500" frameborder="0" allowfullscreen></iframe>`;
   };
   
   const handleCopyCode = () => {
@@ -315,8 +319,10 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
       <div style={{ marginBottom: '20px', padding: '10px', background: '#f0f0f0', border: '1px solid #ddd', borderRadius: '4px' }}>
         <p><strong>Debug Info:</strong></p>
         <p>Map ID: {mapId || 'None'}</p>
-        <p>Using map data: {mapId ? 'Yes' : 'No'}</p>
-        <p>Last update: {new Date().toLocaleTimeString()}</p>
+        <p>States with data: {stateData?.length || 0}</p>
+        <p>Domain: {window.location.origin}</p>
+        <p>Embed URL: {window.location.origin}/embed{mapId ? `?id=${mapId}` : ''}</p>
+        <p>Last updated: {new Date().toLocaleTimeString()}</p>
       </div>
       
       <OptionGroup>
