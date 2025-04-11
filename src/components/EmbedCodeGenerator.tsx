@@ -380,7 +380,7 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
     try {
       setIsLoading(true);
       
-      // Generate a simple random ID like Columns.ai (no server needed)
+      // Generate a simple random ID like Columns.ai
       const generateShortId = () => {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
         let id = '';
@@ -393,11 +393,7 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
       const shortId = generateShortId();
       setServerMapId(shortId);
       
-      // Create a short embed code that uses aspect-ratio like Columns.ai
-      const baseUrl = window.location.origin;
-      
-      // Instead of using a true server-side ID, we'll create a compact data version in the URL hash
-      // This is the key difference from Columns.ai but works with existing architecture
+      // Store data in sessionStorage using the shortId
       const compactData = btoa(unescape(encodeURIComponent(JSON.stringify({
         id: shortId,
         title: title || 'US Map',
@@ -407,9 +403,15 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
         data: stateData
       }))));
       
-      const embedUrl = `${baseUrl}/embed#${shortId}`;
+      // Store in both localStorage and sessionStorage for better persistence
       sessionStorage.setItem(`map_${shortId}`, compactData);
+      localStorage.setItem(`map_${shortId}`, compactData);
       
+      // Create the embed code with a clean path like columns.ai
+      const baseUrl = window.location.origin;
+      const embedUrl = `${baseUrl}/map/${shortId}`;
+      
+      // Create an iframe with aspect-ratio styling exactly like Columns.ai
       const newEmbedCode = `<iframe style="aspect-ratio: 16/9; width: 100%;" src="${embedUrl}" frameborder="0" allowfullscreen></iframe>`;
       setEmbedCode(newEmbedCode);
       

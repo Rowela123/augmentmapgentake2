@@ -19,6 +19,10 @@
       "dest": "/api/$1"
     },
     {
+      "src": "/map/([^/]+)$",
+      "dest": "/shortEmbed.html"
+    },
+    {
       "src": "^/static/(.*)",
       "dest": "/static/$1"
     },
@@ -33,6 +37,10 @@
     {
       "src": "/(.*)\\.ico",
       "dest": "/$1.ico"
+    },
+    {
+      "src": "/(.*)\\.html",
+      "dest": "/$1.html"
     },
     {
       "src": "/(.*)\\.(js|css|map|txt)",
@@ -51,10 +59,14 @@
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET, OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "X-Requested-With, Content-Type, Accept" },
-        { "key": "Content-Security-Policy", "value": "frame-ancestors https://*.myshopify.com https://*.shopify.com https://*.shopifypreview.com https://*.myshopifypreview.com https://biohackerdirect.com https://www.biohackerdirect.com http://biohackerdirect.com http://www.biohackerdirect.com" }
+        {
+          "key": "Content-Security-Policy",
+          "value": "frame-ancestors *;"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
       ]
     }
   ]
