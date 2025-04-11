@@ -118,10 +118,12 @@ function MainApp() {
     console.log('Data received from uploader:', data);
     if (data && data.length > 0) {
       setStateData(data);
+      console.log('Updated stateData in App:', data.length, 'states');
       // Automatically switch to map view to show the uploaded data
       setActiveTab('map');
     } else {
       console.error('Received empty data from uploader');
+      alert('No data was found in the uploaded file. Please check the file format and try again.');
     }
   };
   

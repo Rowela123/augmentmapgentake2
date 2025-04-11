@@ -238,8 +238,27 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
 
   // Update embed code whenever relevant state changes
   useEffect(() => {
-    const newEmbedCode = generateEmbedCode();
-    setEmbedCode(newEmbedCode);
+    // Make sure we have valid data before generating the embed code
+    if (stateData && stateData.length > 0) {
+      const newEmbedCode = generateEmbedCode();
+      setEmbedCode(newEmbedCode);
+    } else if (mapId) {
+      // If we have a mapId but no stateData, try to fetch from localStorage
+      try {
+        const mapData = getMapById(mapId);
+        if (mapData && mapData.data && mapData.data.length > 0) {
+          const newEmbedCode = generateEmbedCode();
+          setEmbedCode(newEmbedCode);
+        } else {
+          setEmbedCode('No map data available. Please save your map first.');
+        }
+      } catch (error) {
+        console.error("Error getting map data:", error);
+        setEmbedCode('Error retrieving map data. Please try again.');
+      }
+    } else {
+      setEmbedCode('No map data available. Please create a map first.');
+    }
   }, [mapId, scaleTitle, minLabel, maxLabel, stateData]);
 
   const generateEmbedCode = () => {
@@ -324,6 +343,19 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
         <p>Embed URL: {window.location.origin}/embed{mapId ? `?id=${mapId}` : ''}</p>
         <p>Last updated: {new Date().toLocaleTimeString()}</p>
       </div>
+      
+      {/* Show a message if there's no data */}
+      {(!stateData || stateData.length === 0) && !mapId && (
+        <WarningBox>
+          <SectionTitle>No Map Data Available</SectionTitle>
+          <p>Please take one of the following actions:</p>
+          <InstructionList>
+            <li>Upload data in the "Upload Data" tab</li>
+            <li>Create and save a map in the "Map Preview" tab</li>
+            <li>Select a previously saved map</li>
+          </InstructionList>
+        </WarningBox>
+      )}
       
       <OptionGroup>
         <SectionTitle>Map Settings</SectionTitle>
