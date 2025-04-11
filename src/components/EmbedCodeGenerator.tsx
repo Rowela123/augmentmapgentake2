@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { getMapById } from '../utils/storageUtils';
 import { StateData } from '../types';
+import { saveMapToServer } from '../utils/apiUtils';
 
 interface EmbedCodeGeneratorProps {
   title: string;
@@ -229,6 +230,9 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
   const [minLabel, setMinLabel] = useState<string>('Low');
   const [maxLabel, setMaxLabel] = useState<string>('High');
 
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [serverMapId, setServerMapId] = useState<string | null>(null);
+
   // Mark component as rendered on first render
   useEffect(() => {
     setHasRendered(true);
@@ -366,6 +370,42 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
     setNotification('Embed code copied to clipboard!');
   };
 
+  // Save map to server to get a short URL
+  const saveMapToServerAndGenerateCode = async () => {
+    if (!stateData || stateData.length === 0) {
+      setNotification('No data available to save');
+      return;
+    }
+    
+    try {
+      setIsLoading(true);
+      const mapData = {
+        title: title || 'Untitled Map',
+        data: stateData,
+        scaleTitle,
+        minLabel,
+        maxLabel
+      };
+      
+      const newMapId = await saveMapToServer(mapData);
+      setServerMapId(newMapId);
+      
+      // Update the embed code to use the server ID
+      const baseUrl = window.location.origin;
+      const embedUrl = `${baseUrl}/embed/${newMapId}`;
+      
+      const newEmbedCode = `<iframe style="aspect-ratio: 16/9; width: 100%;" src="${embedUrl}" frameborder="0" allowfullscreen></iframe>`;
+      setEmbedCode(newEmbedCode);
+      
+      setNotification('Map saved to server. Short embed code generated!');
+    } catch (error) {
+      console.error('Error saving map to server:', error);
+      setNotification('Error saving map. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Container>
       <PageTitle>Get Embed Code</PageTitle>
@@ -374,9 +414,9 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
       <div style={{ marginBottom: '20px', padding: '10px', background: '#f0f0f0', border: '1px solid #ddd', borderRadius: '4px' }}>
         <p><strong>Debug Info:</strong></p>
         <p>Map ID: {mapId || 'None'}</p>
+        <p>Server Map ID: {serverMapId || 'None'}</p>
         <p>States with data: {stateData?.length || 0}</p>
         <p>Domain: {window.location.origin}</p>
-        <p>Embed URL: {window.location.origin}/embed{mapId ? `?id=${mapId}` : ''}</p>
         <p>Last updated: {new Date().toLocaleTimeString()}</p>
         <p>Has rendered: {hasRendered ? 'Yes' : 'No'}</p>
       </div>
@@ -429,25 +469,43 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
       
       <OptionGroup>
         <SectionTitle>Embed Code</SectionTitle>
-        {embedCode ? (
-          <>
-            <CodeBox
-              value={embedCode}
-              readOnly
-              onClick={() => {
-                const textarea = document.querySelector('textarea');
-                if (textarea) textarea.select();
-              }}
-            />
-            <Button onClick={handleCopyCode}>
-              <CopyIcon />
-              Copy Code
-            </Button>
-          </>
-        ) : (
+        {isLoading ? (
           <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
-            Generating embed code... If this message persists, please try refreshing the page.
+            Generating embed code...
           </div>
+        ) : (
+          <>
+            {embedCode ? (
+              <>
+                <CodeBox
+                  value={embedCode}
+                  readOnly
+                  onClick={() => {
+                    const textarea = document.querySelector('textarea');
+                    if (textarea) textarea.select();
+                  }}
+                />
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <Button onClick={handleCopyCode}>
+                    <CopyIcon />
+                    Copy Code
+                  </Button>
+                  {!serverMapId && (
+                    <Button 
+                      onClick={saveMapToServerAndGenerateCode}
+                      style={{ background: '#4caf50' }}
+                    >
+                      Generate Short Embed Code
+                    </Button>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
+                Generating embed code... If this message persists, please try refreshing the page.
+              </div>
+            )}
+          </>
         )}
       </OptionGroup>
       
@@ -457,10 +515,13 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
           <li>Copy the embed code above</li>
           <li>Paste it into your Shopify page or blog post</li>
           <li>The map will automatically adjust to fit the width of its container</li>
+          {serverMapId && (
+            <li><strong>Note:</strong> You're using a short embed code that works just like Columns.ai!</li>
+          )}
         </InstructionList>
         <Note>
           Note: The map will be responsive and adjust to the width of its container.
-          The minimum height is set to 500px to ensure proper display.
+          Using aspect-ratio ensures proper proportions are maintained.
         </Note>
       </InstructionsBox>
       

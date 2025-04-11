@@ -17,6 +17,8 @@ import {
   createBlankMap,
   getMapById
 } from './utils/storageUtils';
+import EmbedPage from './pages/EmbedPage';
+import ServerEmbedPage from './pages/ServerEmbedPage';
 
 const AppContainer = styled.div`
   max-width: 1200px;
@@ -361,6 +363,7 @@ function App() {
       <Routes>
         <Route path="/" element={<MainApp />} />
         <Route path="/embed" element={<EmbedPage />} />
+        <Route path="/embed/:id" element={<ServerEmbedPage />} />
         <Route path="/test" element={<TestPage />} />
       </Routes>
     </BrowserRouter>
