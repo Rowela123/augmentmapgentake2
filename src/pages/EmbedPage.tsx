@@ -86,13 +86,43 @@ const EmbedPage: React.FC = () => {
       mapId,
       dataParam: searchParams.get('data') ? `[${searchParams.get('data')?.substring(0, 20)}...]` : 'None',
       titleParam: searchParams.get('title'),
+      hashFragment: window.location.hash ? window.location.hash.substring(0, 20) + '...' : 'None',
       scaleTitle,
       minLabel,
       maxLabel
     });
     
     try {
-      // Try to get data from URL parameters first
+      // Check for hash fragment first (short URL format)
+      const hash = window.location.hash;
+      if (hash && hash.length > 1) {
+        const shortId = hash.substring(1); // Remove the # character
+        console.log('Found short ID in hash:', shortId);
+        
+        try {
+          // Try to get the data from sessionStorage
+          const storedData = sessionStorage.getItem(`map_${shortId}`);
+          if (storedData) {
+            console.log('Found stored data for ID:', shortId);
+            const decodedData = decodeURIComponent(escape(atob(storedData)));
+            const parsedData = JSON.parse(decodedData);
+            
+            if (parsedData && parsedData.data && Array.isArray(parsedData.data)) {
+              console.log('Successfully loaded data from sessionStorage');
+              setMapData(parsedData.data);
+              setMapTitle(parsedData.title || '');
+              setLoading(false);
+              return;
+            }
+          } else {
+            console.log('No stored data found for ID:', shortId);
+          }
+        } catch (error) {
+          console.error('Error retrieving data from sessionStorage:', error);
+        }
+      }
+      
+      // Then try to get data from URL parameters
       const dataParam = searchParams.get('data');
       const titleParam = searchParams.get('title');
       

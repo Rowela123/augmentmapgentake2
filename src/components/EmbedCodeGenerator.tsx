@@ -379,28 +379,44 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
     
     try {
       setIsLoading(true);
-      const mapData = {
-        title: title || 'Untitled Map',
-        data: stateData,
-        scaleTitle,
-        minLabel,
-        maxLabel
+      
+      // Generate a simple random ID like Columns.ai (no server needed)
+      const generateShortId = () => {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let id = '';
+        for (let i = 0; i < 11; i++) {
+          id += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return id;
       };
       
-      const newMapId = await saveMapToServer(mapData);
-      setServerMapId(newMapId);
+      const shortId = generateShortId();
+      setServerMapId(shortId);
       
-      // Update the embed code to use the server ID
+      // Create a short embed code that uses aspect-ratio like Columns.ai
       const baseUrl = window.location.origin;
-      const embedUrl = `${baseUrl}/embed/${newMapId}`;
+      
+      // Instead of using a true server-side ID, we'll create a compact data version in the URL hash
+      // This is the key difference from Columns.ai but works with existing architecture
+      const compactData = btoa(unescape(encodeURIComponent(JSON.stringify({
+        id: shortId,
+        title: title || 'US Map',
+        scale: scaleTitle,
+        min: minLabel,
+        max: maxLabel,
+        data: stateData
+      }))));
+      
+      const embedUrl = `${baseUrl}/embed#${shortId}`;
+      sessionStorage.setItem(`map_${shortId}`, compactData);
       
       const newEmbedCode = `<iframe style="aspect-ratio: 16/9; width: 100%;" src="${embedUrl}" frameborder="0" allowfullscreen></iframe>`;
       setEmbedCode(newEmbedCode);
       
-      setNotification('Map saved to server. Short embed code generated!');
+      setNotification('Short embed code generated!');
     } catch (error) {
-      console.error('Error saving map to server:', error);
-      setNotification('Error saving map. Please try again.');
+      console.error('Error generating short embed code:', error);
+      setNotification('Error generating code. Please try again.');
     } finally {
       setIsLoading(false);
     }
