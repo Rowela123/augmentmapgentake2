@@ -6,7 +6,7 @@ import { StateData } from '../types';
 interface EmbedCodeGeneratorProps {
   title: string;
   mapId: string;
-  stateData?: StateData[];  // Add stateData as an optional prop
+  stateData?: StateData[];
 }
 
 // Animations
@@ -209,38 +209,14 @@ const NotificationMessage = styled.div`
 `;
 
 const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, stateData }) => {
-  console.log('EmbedCodeGenerator rendering with:', { 
-    title, 
-    mapId, 
-    stateDataExists: stateData !== undefined,
-    stateDataLength: stateData?.length || 0 
-  });
-
-  const [height, setHeight] = useState<number>(600);
-  const [width, setWidth] = useState<number>(900);
-  const [responsive, setResponsive] = useState<boolean>(true);
-  const [copied, setCopied] = useState<boolean>(false);
-  const [notification, setNotification] = useState<{ message: string; type: string } | null>(null);
+  const [notification, setNotification] = useState<string | null>(null);
   const [embedCode, setEmbedCode] = useState<string>('');
-  const [hasRendered, setHasRendered] = useState<boolean>(false);
   
   // Scale customization
   const [scaleTitle, setScaleTitle] = useState<string>('');
   const [minLabel, setMinLabel] = useState<string>('Low');
   const [maxLabel, setMaxLabel] = useState<string>('High');
 
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-
-  // Mark component as rendered on first render
-  useEffect(() => {
-    setHasRendered(true);
-    console.log('EmbedCodeGenerator has rendered');
-  }, []);
-
-  // Check if we're running in development or production
-  const isLocalhost = window.location.hostname === "localhost" || 
-                      window.location.hostname === "127.0.0.1";
-                      
   // Clear notification after 3 seconds
   useEffect(() => {
     if (notification) {
@@ -252,101 +228,23 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
     }
   }, [notification]);
 
-  // Update embed code whenever relevant state changes
+  // Generate embed code on component mount and when dependencies change
   useEffect(() => {
-    console.log('EmbedCodeGenerator useEffect triggered with:', {
-      mapId,
-      stateDataExists: stateData !== undefined,
-      stateDataLength: stateData?.length || 0
-    });
-
-    try {
-      // Make sure we have valid data before generating the embed code
-      if (stateData && stateData.length > 0) {
-        console.log('Using provided stateData for embed code');
-        const newEmbedCode = generateEmbedCode();
-        setEmbedCode(newEmbedCode);
-      } else if (mapId) {
-        // If we have a mapId but no stateData, try to fetch from localStorage
-        console.log('Trying to fetch map data from localStorage with ID:', mapId);
-        const mapData = getMapById(mapId);
-        console.log('Retrieved map data:', mapData);
-        
-        if (mapData && mapData.data && mapData.data.length > 0) {
-          console.log('Using map data from localStorage for embed code');
-          const newEmbedCode = generateEmbedCode();
-          setEmbedCode(newEmbedCode);
-        } else {
-          console.log('No valid map data found in localStorage');
-          setEmbedCode('No map data available. Please save your map first.');
-        }
-      } else {
-        console.log('No mapId or stateData available');
-        setEmbedCode('No map data available. Please create a map first.');
-      }
-    } catch (error) {
-      console.error("Error in EmbedCodeGenerator useEffect:", error);
-      setEmbedCode('Error generating embed code. Please try again.');
+    if (mapId) {
+      const code = generateEmbedCode();
+      setEmbedCode(code);
     }
   }, [mapId, scaleTitle, minLabel, maxLabel, stateData]);
 
+  // Simple embed code generation
   const generateEmbedCode = () => {
     try {
-      // Build the URL with all necessary parameters
-      const params = new URLSearchParams();
-      let mapData = null;
+      // Get the base URL for the embed
+      const baseUrl = window.location.origin;
+      const embedUrl = `${baseUrl}/embed?id=${mapId}`;
       
-      // Get map data either from props or localStorage
-      if (stateData && stateData.length > 0) {
-        mapData = stateData;
-        console.log('Using provided stateData:', stateData.length, 'states');
-      } else if (mapId) {
-        // Get map data from localStorage
-        const savedMap = getMapById(mapId);
-        if (savedMap && savedMap.data && savedMap.data.length > 0) {
-          mapData = savedMap.data;
-          console.log('Using map data from localStorage:', savedMap.data.length, 'states');
-        } else {
-          console.error('No map data found for mapId:', mapId);
-          return 'Error: No map data found. Please create a map first.';
-        }
-      } else {
-        console.warn('No mapId or stateData provided to generateEmbedCode');
-        return 'Error: No map data available. Please create a map first.';
-      }
-      
-      // Include data in the URL parameters
-      if (mapData) {
-        // Safely encode the data, handling Unicode characters
-        const jsonString = JSON.stringify(mapData);
-        const compressedData = btoa(unescape(encodeURIComponent(jsonString)));
-        params.append('data', compressedData);
-        
-        // Include the mapId for reference if available
-        if (mapId) {
-          params.append('id', mapId);
-        }
-        
-        // Include the title if available
-        if (title) {
-          params.append('title', title);
-        }
-        
-        // Add the customization parameters
-        if (scaleTitle) params.append('scaleTitle', scaleTitle);
-        if (minLabel) params.append('minLabel', minLabel);
-        if (maxLabel) params.append('maxLabel', maxLabel);
-        
-        // Get the current domain
-        const baseUrl = window.location.origin;
-        const queryString = params.toString() ? `?${params.toString()}` : '';
-        const embedUrl = `${baseUrl}/embed${queryString}`;
-        
-        // Return a simple iframe code with aspect-ratio styling like Columns.ai
-        return `<iframe style="aspect-ratio: 16/9; width: 100%;" src="${embedUrl}" frameborder="0" allowfullscreen></iframe>`;
-      } else {
-        return 'Error: Could not generate embed code. No map data available.';
-      }
+      // Create a simple iframe with responsive styling
+      return `<iframe style="aspect-ratio: 16/9; width: 100%;" src="${embedUrl}" frameborder="0" allowfullscreen></iframe>`;
     } catch (error) {
       console.error("Error generating embed code:", error);
       return 'Error generating embed code. Please try again.';
@@ -355,37 +253,13 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
   
   const handleCopyCode = () => {
     navigator.clipboard.writeText(embedCode);
-    setNotification({
-      message: 'Embed code copied to clipboard!',
-      type: 'success',
-    });
+    setNotification('Embed code copied to clipboard!');
   };
 
-  // Save map to server to get a short URL
-  const saveMapToServerAndGenerateCode = async () => {
-    if (!mapId) {
-      setNotification({
-        message: 'No map data available. Please create a map first.',
-        type: 'error',
-      });
-      return;
-    }
-    
-    try {
-      // No longer using server API, simply generate the embed code
-      const embedCode = generateEmbedCode();
-      setEmbedCode(embedCode);
-      setNotification({
-        message: 'Embed code generated successfully!',
-        type: 'success',
-      });
-    } catch (error) {
-      console.error('Error generating embed code:', error);
-      setNotification({
-        message: 'Error generating embed code. Please try again.',
-        type: 'error',
-      });
-    }
+  const regenerateEmbedCode = () => {
+    const code = generateEmbedCode();
+    setEmbedCode(code);
+    setNotification('Embed code generated successfully!');
   };
 
   return (
@@ -398,12 +272,10 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
         <p>Map ID: {mapId || 'None'}</p>
         <p>States with data: {stateData?.length || 0}</p>
         <p>Domain: {window.location.origin}</p>
-        <p>Last updated: {new Date().toLocaleTimeString()}</p>
-        <p>Has rendered: {hasRendered ? 'Yes' : 'No'}</p>
       </div>
       
       {/* Show a message if there's no data */}
-      {(!stateData || stateData.length === 0) && !mapId && (
+      {(!mapId) && (
         <WarningBox>
           <SectionTitle>No Map Data Available</SectionTitle>
           <p>Please take one of the following actions:</p>
@@ -450,42 +322,26 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
       
       <OptionGroup>
         <SectionTitle>Embed Code</SectionTitle>
-        {isLoading ? (
-          <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
-            Generating embed code...
-          </div>
-        ) : (
-          <>
-            {embedCode ? (
-              <>
-                <CodeBox
-                  value={embedCode}
-                  readOnly
-                  onClick={() => {
-                    const textarea = document.querySelector('textarea');
-                    if (textarea) textarea.select();
-                  }}
-                />
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <Button onClick={handleCopyCode}>
-                    <CopyIcon />
-                    Copy Code
-                  </Button>
-                  <Button 
-                    onClick={saveMapToServerAndGenerateCode}
-                    style={{ background: '#4caf50' }}
-                  >
-                    Generate Embed Code
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
-                Generating embed code... If this message persists, please try refreshing the page.
-              </div>
-            )}
-          </>
-        )}
+        <CodeBox
+          value={embedCode}
+          readOnly
+          onClick={() => {
+            const textarea = document.querySelector('textarea');
+            if (textarea) textarea.select();
+          }}
+        />
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <Button onClick={handleCopyCode}>
+            <CopyIcon />
+            Copy Code
+          </Button>
+          <Button 
+            onClick={regenerateEmbedCode}
+            style={{ background: '#4caf50' }}
+          >
+            Generate Embed Code
+          </Button>
+        </div>
       </OptionGroup>
       
       <InstructionsBox>
@@ -503,7 +359,7 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
       
       {notification && (
         <NotificationMessage>
-          {notification.message}
+          {notification}
         </NotificationMessage>
       )}
     </Container>
