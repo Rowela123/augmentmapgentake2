@@ -295,40 +295,14 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
       
       // Include the mapId if available
       if (mapId) {
+        // When we have a mapId, just use that for a shorter URL
+        console.log('Using mapId for embed code:', mapId);
         params.append('id', mapId);
         
-        // Get the actual map data to include directly in the URL
-        try {
-          // If we have stateData directly, use that
-          if (stateData && stateData.length > 0) {
-            console.log('Using provided stateData:', stateData.length, 'states');
-            // Safely encode the data, handling Unicode characters
-            const jsonString = JSON.stringify(stateData);
-            const compressedData = btoa(unescape(encodeURIComponent(jsonString)));
-            params.append('data', compressedData);
-            params.append('title', title || '');
-            console.log('Added data parameter with length:', compressedData.length);
-          } 
-          // Otherwise try to get it from localStorage
-          else {
-            const mapData = getMapById(mapId);
-            console.log('Retrieved map data from localStorage:', mapData);
-            if (mapData && mapData.data) {
-              // Safely encode the data, handling Unicode characters
-              const jsonString = JSON.stringify(mapData.data);
-              const compressedData = btoa(unescape(encodeURIComponent(jsonString)));
-              params.append('data', compressedData);
-              params.append('title', mapData.title || '');
-              console.log('Added data parameter with length:', compressedData.length);
-            } else {
-              console.error('No map data found for mapId:', mapId);
-              return 'Error: No map data found. Please create a map first.';
-            }
-          }
-        } catch (error) {
-          console.error("Error processing map data:", error);
-          return 'Error processing map data. Please try again.';
-        }
+        // Only add these parameters if they're customized
+        if (scaleTitle) params.append('scaleTitle', scaleTitle);
+        if (minLabel && minLabel !== 'Low') params.append('minLabel', minLabel);
+        if (maxLabel && maxLabel !== 'High') params.append('maxLabel', maxLabel);
       } 
       // If no mapId but we have stateData, use that
       else if (stateData && stateData.length > 0) {
@@ -339,15 +313,15 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
         params.append('data', compressedData);
         params.append('title', title || '');
         console.log('Added data parameter with length:', compressedData.length);
+        
+        if (scaleTitle) params.append('scaleTitle', scaleTitle);
+        if (minLabel) params.append('minLabel', minLabel);
+        if (maxLabel) params.append('maxLabel', maxLabel);
       }
       else {
         console.warn('No mapId or stateData provided to generateEmbedCode');
         return 'Error: No map data available. Please create a map first.';
       }
-      
-      if (scaleTitle) params.append('scaleTitle', scaleTitle);
-      if (minLabel) params.append('minLabel', minLabel);
-      if (maxLabel) params.append('maxLabel', maxLabel);
       
       // Get the current domain
       const baseUrl = window.location.origin;

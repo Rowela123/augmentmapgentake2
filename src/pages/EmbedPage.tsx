@@ -121,6 +121,21 @@ const EmbedPage: React.FC = () => {
         } catch (error) {
           console.error("Error decoding data from URL:", error);
         }
+      } 
+      // If no data parameter but we have a mapId, try to get it from localStorage
+      else if (mapId) {
+        console.log('No data parameter, trying to load map with ID:', mapId);
+        const mapData = getMapById(mapId);
+        
+        if (mapData && mapData.data && Array.isArray(mapData.data) && mapData.data.length > 0) {
+          console.log(`Successfully loaded map from storage: ${mapData.data.length} states`);
+          setMapData(mapData.data);
+          setMapTitle(mapData.title || '');
+          setLoading(false);
+          return;
+        } else {
+          console.error("Could not load valid map data from storage for ID:", mapId);
+        }
       }
       
       // Fallback to sample data if URL doesn't contain map data
