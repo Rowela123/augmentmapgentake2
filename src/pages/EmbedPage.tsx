@@ -21,7 +21,7 @@ const setupEmbedHeaders = () => {
   document.head.appendChild(corsHeader);
 };
 
-// Styled for a full-viewport container
+// Styled for a full-viewport container with absolute positioning
 const EmbedContainer = styled.div`
   margin: 0;
   padding: 0;
@@ -73,6 +73,14 @@ const EmbedPage: React.FC = () => {
     document.body.style.margin = '0';
     document.body.style.padding = '0';
     document.body.style.overflow = 'hidden';
+    document.title = 'US Map'; // Set a simple title
+    
+    // Hide any app headers or navigation that might be present
+    const appHeader = document.querySelector('header');
+    if (appHeader) (appHeader as HTMLElement).style.display = 'none';
+    
+    const tabs = document.querySelector('[class*="Tabs"]');
+    if (tabs) (tabs as HTMLElement).style.display = 'none';
     
     try {
       // Try to load specific map if ID provided
@@ -102,7 +110,7 @@ const EmbedPage: React.FC = () => {
     }
   }, [mapId]);
 
-  // Render ONLY the map component
+  // Render ONLY the map component with fullscreen styles
   return (
     <EmbedContainer>
       {loading ? (
