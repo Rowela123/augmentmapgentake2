@@ -248,7 +248,7 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
     if (maxLabel) params.append('maxLabel', maxLabel);
     
     const queryString = params.toString() ? `?${params.toString()}` : '';
-    const embedUrl = `https://map-generator-umber.vercel.app/embed${queryString}`;
+    const embedUrl = `https://map-generator-take2.vercel.app/embed${queryString}`;
     
     return `<iframe src="${embedUrl}" width="100%" style="min-height:500px" frameborder="0" allowfullscreen></iframe>`;
   };
@@ -258,67 +258,12 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
     setNotification('Embed code copied to clipboard!');
   };
 
-  const handleSelectCode = (e: React.MouseEvent<HTMLTextAreaElement>) => {
-    (e.target as HTMLTextAreaElement).select();
-  };
-
   return (
     <Container>
       <PageTitle>Get Embed Code</PageTitle>
       
-      {isLocalhost && (
-        <WarningBox>
-          <SectionTitle>⚠️ Deployment Required</SectionTitle>
-          <p>The embed code will not work on external sites until you deploy this application to a public URL.</p>
-          <p>To make the map work on Shopify:</p>
-          <InstructionList>
-            <li>Deploy this application to a public URL (e.g., using Vercel, Netlify, or similar services)</li>
-            <li>Make sure your deployment is using HTTPS</li>
-            <li>Once deployed, copy the embed code from the deployed version</li>
-            <li>Paste the embed code into your Shopify page's HTML editor</li>
-          </InstructionList>
-          <Note>
-            <strong>Note:</strong> Currently, the application is running locally. For Shopify integration, you must deploy to a public URL with HTTPS support.
-          </Note>
-        </WarningBox>
-      )}
-      
       <OptionGroup>
         <SectionTitle>Map Settings</SectionTitle>
-        <InputGroup>
-          <FormGroup>
-            <Label>Width (px)</Label>
-            <Input
-              type="number"
-              value={width}
-              onChange={(e) => setWidth(Number(e.target.value))}
-              disabled={responsive}
-            />
-          </FormGroup>
-          <FormGroup>
-            <Label>Height (px)</Label>
-            <Input
-              type="number"
-              value={height}
-              onChange={(e) => setHeight(Number(e.target.value))}
-              disabled={responsive}
-            />
-          </FormGroup>
-          <FormGroup>
-            <Label>&nbsp;</Label>
-            <label>
-              <input
-                type="checkbox"
-                checked={responsive}
-                onChange={(e) => setResponsive(e.target.checked)}
-              /> Responsive (100% width)
-            </label>
-          </FormGroup>
-        </InputGroup>
-      </OptionGroup>
-      
-      <OptionGroup>
-        <SectionTitle>Scale Customization</SectionTitle>
         <InputGroup>
           <FormGroup>
             <Label>Scale Title</Label>
@@ -351,29 +296,31 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
       </OptionGroup>
       
       <OptionGroup>
-        <SectionTitle>Your Embed Code</SectionTitle>
-        <p>Copy and paste this code into your website to display the map:</p>
-        <CodeBox 
-          value={embedCode} 
+        <SectionTitle>Embed Code</SectionTitle>
+        <CodeBox
+          value={embedCode}
           readOnly
-          onClick={handleSelectCode}
+          onClick={() => {
+            const textarea = document.querySelector('textarea');
+            if (textarea) textarea.select();
+          }}
         />
         <Button onClick={handleCopyCode}>
-          <CopyIcon /> Copy to Clipboard
+          <CopyIcon />
+          Copy Code
         </Button>
       </OptionGroup>
       
       <InstructionsBox>
-        <SectionTitle>How to Use This Embed Code</SectionTitle>
+        <SectionTitle>How to Use This Code</SectionTitle>
         <InstructionList>
-          <li>Copy the code above by clicking the "Copy to Clipboard" button.</li>
-          <li>In your Shopify admin, go to where you want to embed the map (blog post, page, etc.)</li>
-          <li>Switch to the HTML editor (look for the &lt;&gt; button or HTML mode)</li>
-          <li>Paste the code where you want the map to appear</li>
-          <li>Save your changes and preview your site to see the embedded map</li>
+          <li>Copy the embed code above</li>
+          <li>Paste it into your Shopify page or blog post</li>
+          <li>The map will automatically adjust to fit the width of its container</li>
         </InstructionList>
         <Note>
-          <strong>Note:</strong> For Shopify themes that don't allow direct HTML embedding, you may need to use a custom HTML app from the Shopify App Store.
+          Note: The map will be responsive and adjust to the width of its container.
+          The minimum height is set to 500px to ensure proper display.
         </Note>
       </InstructionsBox>
       
