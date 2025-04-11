@@ -217,7 +217,6 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
   const [scaleTitle, setScaleTitle] = useState<string>('');
   const [minLabel, setMinLabel] = useState<string>('Low');
   const [maxLabel, setMaxLabel] = useState<string>('High');
-  const [tooltipDescription, setTooltipDescription] = useState<string>('Popular side hustles and their average monthly earnings in');
 
   // Check if we're running in development or production
   const isLocalhost = window.location.hostname === "localhost" || 
@@ -238,7 +237,7 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
   useEffect(() => {
     const newEmbedCode = generateEmbedCode();
     setEmbedCode(newEmbedCode);
-  }, [mapId, scaleTitle, minLabel, maxLabel, tooltipDescription]);
+  }, [mapId, scaleTitle, minLabel, maxLabel]);
 
   const generateEmbedCode = () => {
     // Build query parameters
@@ -247,7 +246,6 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
     if (scaleTitle) params.append('scaleTitle', scaleTitle);
     if (minLabel) params.append('minLabel', minLabel);
     if (maxLabel) params.append('maxLabel', maxLabel);
-    if (tooltipDescription) params.append('tooltipDescription', tooltipDescription);
     
     const queryString = params.toString() ? `?${params.toString()}` : '';
     const embedUrl = `https://map-generator-umber.vercel.app/embed${queryString}`;
@@ -266,7 +264,7 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
 
   return (
     <Container>
-      <PageTitle>Embed Your Map</PageTitle>
+      <PageTitle>Get Embed Code</PageTitle>
       
       {isLocalhost && (
         <WarningBox>
@@ -323,49 +321,33 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
         <SectionTitle>Scale Customization</SectionTitle>
         <InputGroup>
           <FormGroup>
-            <Label>Minimum Label</Label>
-            <Input
-              type="text"
-              value={minLabel}
-              onChange={(e) => setMinLabel(e.target.value)}
-              placeholder="Low"
-            />
-          </FormGroup>
-          <FormGroup>
-            <Label>Scale Title (optional)</Label>
+            <Label>Scale Title</Label>
             <Input
               type="text"
               value={scaleTitle}
               onChange={(e) => setScaleTitle(e.target.value)}
-              placeholder="Leave blank for no title"
+              placeholder="e.g., Average Monthly Earnings"
             />
           </FormGroup>
           <FormGroup>
-            <Label>Maximum Label</Label>
+            <Label>Min Label</Label>
+            <Input
+              type="text"
+              value={minLabel}
+              onChange={(e) => setMinLabel(e.target.value)}
+              placeholder="e.g., Low"
+            />
+          </FormGroup>
+          <FormGroup>
+            <Label>Max Label</Label>
             <Input
               type="text"
               value={maxLabel}
               onChange={(e) => setMaxLabel(e.target.value)}
-              placeholder="High"
+              placeholder="e.g., High"
             />
           </FormGroup>
         </InputGroup>
-      </OptionGroup>
-      
-      <OptionGroup>
-        <SectionTitle>Tooltip Customization</SectionTitle>
-        <FormGroup>
-          <Label>Tooltip Description</Label>
-          <Input
-            type="text"
-            value={tooltipDescription}
-            onChange={(e) => setTooltipDescription(e.target.value)}
-            placeholder="Popular side hustles and their average monthly earnings in"
-          />
-          <div style={{ fontSize: '12px', color: '#777', marginTop: '5px' }}>
-            This text appears before the state name in tooltips. The state name will be automatically added.
-          </div>
-        </FormGroup>
       </OptionGroup>
       
       <OptionGroup>
