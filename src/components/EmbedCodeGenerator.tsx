@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { getMapById } from '../utils/storageUtils';
+import { StateData } from '../types';
 
 interface EmbedCodeGeneratorProps {
   title: string;
   mapId: string;
+  stateData?: StateData[];  // Add stateData as an optional prop
 }
 
 // Animations
@@ -206,7 +208,7 @@ const NotificationMessage = styled.div`
   }
 `;
 
-const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId }) => {
+const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, stateData }) => {
   const [height, setHeight] = useState<number>(600);
   const [width, setWidth] = useState<number>(900);
   const [responsive, setResponsive] = useState<boolean>(true);
@@ -238,34 +240,55 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
   useEffect(() => {
     const newEmbedCode = generateEmbedCode();
     setEmbedCode(newEmbedCode);
-  }, [mapId, scaleTitle, minLabel, maxLabel]);
+  }, [mapId, scaleTitle, minLabel, maxLabel, stateData]);
 
   const generateEmbedCode = () => {
     // Build the URL with all necessary parameters
     const params = new URLSearchParams();
     
-    // Include the mapId
+    // Include the mapId if available
     if (mapId) {
       params.append('id', mapId);
       
       // Get the actual map data to include directly in the URL
       try {
-        const mapData = getMapById(mapId);
-        console.log('Retrieved map data:', mapData);
-        if (mapData && mapData.data) {
+        // If we have stateData directly, use that
+        if (stateData && stateData.length > 0) {
+          console.log('Using provided stateData:', stateData.length, 'states');
           // Compress the data to keep the URL shorter
-          const compressedData = btoa(JSON.stringify(mapData.data));
+          const compressedData = btoa(JSON.stringify(stateData));
           params.append('data', compressedData);
-          params.append('title', mapData.title || '');
+          params.append('title', title || '');
           console.log('Added data parameter with length:', compressedData.length);
-        } else {
-          console.error('No map data found for mapId:', mapId);
+        } 
+        // Otherwise try to get it from localStorage
+        else {
+          const mapData = getMapById(mapId);
+          console.log('Retrieved map data from localStorage:', mapData);
+          if (mapData && mapData.data) {
+            // Compress the data to keep the URL shorter
+            const compressedData = btoa(JSON.stringify(mapData.data));
+            params.append('data', compressedData);
+            params.append('title', mapData.title || '');
+            console.log('Added data parameter with length:', compressedData.length);
+          } else {
+            console.error('No map data found for mapId:', mapId);
+          }
         }
       } catch (error) {
         console.error("Error getting map data:", error);
       }
-    } else {
-      console.warn('No mapId provided to generateEmbedCode');
+    } 
+    // If no mapId but we have stateData, use that
+    else if (stateData && stateData.length > 0) {
+      console.log('No mapId but using provided stateData:', stateData.length, 'states');
+      const compressedData = btoa(JSON.stringify(stateData));
+      params.append('data', compressedData);
+      params.append('title', title || '');
+      console.log('Added data parameter with length:', compressedData.length);
+    }
+    else {
+      console.warn('No mapId or stateData provided to generateEmbedCode');
     }
     
     if (scaleTitle) params.append('scaleTitle', scaleTitle);
@@ -275,7 +298,7 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
     const queryString = params.toString() ? `?${params.toString()}` : '';
     const embedUrl = `https://map-generator-take2.vercel.app/embed${queryString}`;
     
-    console.log("Generated embed code with mapId:", mapId);
+    console.log("Generated embed code with mapId:", mapId, "and stateData length:", stateData?.length || 0);
     return `<iframe src="${embedUrl}" width="100%" style="min-height:500px" frameborder="0" allowfullscreen></iframe>`;
   };
   

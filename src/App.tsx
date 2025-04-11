@@ -323,6 +323,7 @@ function MainApp() {
           <EmbedCodeGenerator
             title={mapTitle}
             mapId={currentMapId || ''}
+            stateData={stateData}
           />
         )}
       </Content>
