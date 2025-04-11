@@ -241,33 +241,15 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
   }, [mapId, scaleTitle, minLabel, maxLabel]);
 
   const generateEmbedCode = () => {
-    // Build query parameters
+    // Build the URL with all necessary parameters
     const params = new URLSearchParams();
-    
-    // Include the map ID
-    if (mapId) {
-      params.append('id', mapId);
-      
-      // Get the actual map data to include in the URL
-      try {
-        const mapData = getMapById(mapId);
-        if (mapData) {
-          // Convert map data to a Base64 string to keep the URL shorter
-          const compressedData = btoa(JSON.stringify(mapData.data));
-          params.append('mapData', compressedData);
-          params.append('mapTitle', mapData.title || '');
-        }
-      } catch (error) {
-        console.error("Error getting map data:", error);
-      }
-    }
-    
+    if (mapId) params.append('id', mapId);
     if (scaleTitle) params.append('scaleTitle', scaleTitle);
     if (minLabel) params.append('minLabel', minLabel);
     if (maxLabel) params.append('maxLabel', maxLabel);
     
     const queryString = params.toString() ? `?${params.toString()}` : '';
-    const embedUrl = `https://map-generator-take2.vercel.app/embed${queryString}`;
+    const embedUrl = `https://map-generator-take2.vercel.app/standalone-map.html${queryString}`;
     
     console.log("Generated embed code with mapId:", mapId);
     return `<iframe src="${embedUrl}" width="100%" style="min-height:500px" frameborder="0" allowfullscreen></iframe>`;

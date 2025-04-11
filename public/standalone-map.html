@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>US Map Visualization</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://d3js.org/topojson.v3.min.js"></script>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+    #map-container {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+    .tooltip {
+      position: absolute;
+      padding: 10px;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      max-width: 250px;
+      z-index: 100;
+    }
+    .tooltip h3 {
+      margin: 0 0 5px 0;
+      font-size: 16px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 5px;
+    }
+    .tooltip p {
+      margin: 5px 0;
+      font-size: 14px;
+    }
+    .legend {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background: white;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .legend-title {
+      text-align: center;
+      margin-bottom: 5px;
+      font-weight: bold;
+      font-size: 12px;
+    }
+    .legend-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div id="map-container"></div>
+  <div class="tooltip"></div>
+  <script>
+    // Function to get URL parameters
+    function getUrlParameter(name) {
+      name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+      var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+      var results = regex.exec(location.search);
+      return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+    }
+
+    // Get map parameters from URL
+    const mapId = getUrlParameter('id');
+    const minLabel = getUrlParameter('minLabel') || 'Low';
+    const maxLabel = getUrlParameter('maxLabel') || 'High';
+    const scaleTitle = getUrlParameter('scaleTitle') || '';
+
+    // Constants for map
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    const COLORS = ['#edf8fb', '#b3cde3', '#8c96c6', '#8856a7', '#810f7c'];
+    
+    // Set up the SVG
+    const svg = d3.select('#map-container')
+      .append('svg')
+      .attr('width', '100%')
+      .attr('height', '100%')
+      .attr('viewBox', `0 0 ${width} ${height}`)
+      .attr('preserveAspectRatio', 'xMidYMid meet');
+
+    // Set up tooltip
+    const tooltip = d3.select('.tooltip');
+    
+    // Add legend
+    const legend = svg.append('g')
+      .attr('class', 'legend')
+      .attr('transform', `translate(${width - 150}, ${height - 80})`);
+    
+    // Initialize the map data
+    let stateData = [];
+    
+    // First try to get the saved map data from localStorage
+    if (mapId) {
+      try {
+        const savedMapsJSON = localStorage.getItem('us_map_generator_saved_maps');
+        if (savedMapsJSON) {
+          const savedMaps = JSON.parse(savedMapsJSON);
+          const mapData = savedMaps.find(map => map.id === mapId);
+          if (mapData && mapData.data) {
+            stateData = mapData.data;
+            console.log('Loaded saved map:', mapData.title);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading saved map:', error);
+      }
+    }
+    
+    // If no data was found, use sample data
+    if (stateData.length === 0) {
+      // Sample data - will be replaced with actual data in the app
+      stateData = [
+        { state: 'AL', value: 1500 },
+        { state: 'AK', value: 2100 },
+        { state: 'AZ', value: 3200 },
+        { state: 'AR', value: 1800 },
+        { state: 'CA', value: 5000 },
+        { state: 'CO', value: 3700 },
+        { state: 'CT', value: 3400 },
+        { state: 'DE', value: 2800 },
+        { state: 'FL', value: 4100 },
+        { state: 'GA', value: 3300 },
+        { state: 'HI', value: 3000 },
+        { state: 'ID', value: 2500 },
+        { state: 'IL', value: 3900 },
+        { state: 'IN', value: 2700 },
+        { state: 'IA', value: 2300 },
+        { state: 'KS', value: 2400 },
+        { state: 'KY', value: 2200 },
+        { state: 'LA', value: 2000 },
+        { state: 'ME', value: 2600 },
+        { state: 'MD', value: 3800 },
+        { state: 'MA', value: 4200 },
+        { state: 'MI', value: 3100 },
+        { state: 'MN', value: 3500 },
+        { state: 'MS', value: 1600 },
+        { state: 'MO', value: 2700 },
+        { state: 'MT', value: 2300 },
+        { state: 'NE', value: 2500 },
+        { state: 'NV', value: 3200 },
+        { state: 'NH', value: 3100 },
+        { state: 'NJ', value: 4300 },
+        { state: 'NM', value: 2400 },
+        { state: 'NY', value: 4700 },
+        { state: 'NC', value: 3400 },
+        { state: 'ND', value: 2200 },
+        { state: 'OH', value: 3300 },
+        { state: 'OK', value: 2300 },
+        { state: 'OR', value: 3600 },
+        { state: 'PA', value: 3800 },
+        { state: 'RI', value: 3300 },
+        { state: 'SC', value: 2800 },
+        { state: 'SD', value: 2100 },
+        { state: 'TN', value: 2900 },
+        { state: 'TX', value: 4200 },
+        { state: 'UT', value: 3100 },
+        { state: 'VT', value: 2600 },
+        { state: 'VA', value: 3700 },
+        { state: 'WA', value: 4000 },
+        { state: 'WV', value: 1900 },
+        { state: 'WI', value: 3200 },
+        { state: 'WY', value: 2000 }
+      ];
+    }
+    
+    // Function to get state name from abbreviation
+    function getStateName(stateCode) {
+      const stateMap = {
+        'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
+        'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware', 'FL': 'Florida', 'GA': 'Georgia',
+        'HI': 'Hawaii', 'ID': 'Idaho', 'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa',
+        'KS': 'Kansas', 'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
+        'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi', 'MO': 'Missouri',
+        'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada', 'NH': 'New Hampshire', 'NJ': 'New Jersey',
+        'NM': 'New Mexico', 'NY': 'New York', 'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio',
+        'OK': 'Oklahoma', 'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+        'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah', 'VT': 'Vermont',
+        'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming',
+        'DC': 'District of Columbia'
+      };
+      return stateMap[stateCode] || stateCode;
+    }
+    
+    // Set up color scale
+    const valueExtent = d3.extent(stateData, d => d.value);
+    const colorScale = d3.scaleQuantize()
+      .domain(valueExtent)
+      .range(COLORS);
+    
+    // Load US map
+    d3.json('https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json').then(us => {
+      // Draw the states
+      svg.append('g')
+        .selectAll('path')
+        .data(topojson.feature(us, us.objects.states).features)
+        .enter()
+        .append('path')
+        .attr('d', d3.geoPath())
+        .attr('fill', d => {
+          const stateCode = getStateCode(d.properties.name);
+          const stateDataItem = stateData.find(s => s.state === stateCode);
+          return stateDataItem ? colorScale(stateDataItem.value) : '#f0f0f0';
+        })
+        .attr('stroke', '#fff')
+        .attr('stroke-width', 0.5)
+        .on('mouseover', function(event, d) {
+          const stateCode = getStateCode(d.properties.name);
+          const stateDataItem = stateData.find(s => s.state === stateCode);
+          if (stateDataItem) {
+            const [x, y] = d3.pointer(event, this);
+            tooltip.transition().duration(200).style('opacity', 0.9);
+            tooltip.html(`
+              <h3>${getStateName(stateCode)}</h3>
+              <p>Value: $${stateDataItem.value.toLocaleString()}</p>
+            `)
+            .style('left', (x + 15) + 'px')
+            .style('top', (y - 30) + 'px');
+          }
+        })
+        .on('mouseout', function() {
+          tooltip.transition().duration(500).style('opacity', 0);
+        });
+      
+      // Function to get state code from state name
+      function getStateCode(stateName) {
+        const nameToCode = {
+          'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 'California': 'CA',
+          'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE', 'Florida': 'FL', 'Georgia': 'GA',
+          'Hawaii': 'HI', 'Idaho': 'ID', 'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA',
+          'Kansas': 'KS', 'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD',
+          'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS', 'Missouri': 'MO',
+          'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV', 'New Hampshire': 'NH', 'New Jersey': 'NJ',
+          'New Mexico': 'NM', 'New York': 'NY', 'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH',
+          'Oklahoma': 'OK', 'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC',
+          'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT', 'Vermont': 'VT',
+          'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY',
+          'District of Columbia': 'DC'
+        };
+        return nameToCode[stateName] || '';
+      }
+      
+      // Add legend
+      if (scaleTitle) {
+        legend.append('text')
+          .attr('class', 'legend-title')
+          .attr('x', 60)
+          .attr('y', 15)
+          .attr('text-anchor', 'middle')
+          .text(scaleTitle);
+      }
+      
+      const legendWidth = 120;
+      const legendHeight = 10;
+      
+      const legendScale = d3.scaleLinear()
+        .domain(valueExtent)
+        .range([0, legendWidth]);
+      
+      const legendAxis = d3.axisBottom(legendScale)
+        .tickSize(0)
+        .tickValues([])
+        .tickFormat(() => '');
+      
+      legend.append('g')
+        .attr('transform', `translate(0, ${legendHeight})`)
+        .call(legendAxis);
+      
+      COLORS.forEach((color, i) => {
+        const segmentWidth = legendWidth / COLORS.length;
+        legend.append('rect')
+          .attr('x', i * segmentWidth)
+          .attr('y', 20)
+          .attr('width', segmentWidth)
+          .attr('height', legendHeight)
+          .attr('fill', color);
+      });
+      
+      legend.append('g')
+        .attr('class', 'legend-labels')
+        .attr('transform', `translate(0, ${legendHeight + 20})`)
+        .call(g => {
+          g.append('text')
+            .attr('x', 0)
+            .attr('y', 15)
+            .text(minLabel);
+          
+          g.append('text')
+            .attr('x', legendWidth)
+            .attr('y', 15)
+            .attr('text-anchor', 'end')
+            .text(maxLabel);
+        });
+    });
+  </script>
+</body>
+</html> 
