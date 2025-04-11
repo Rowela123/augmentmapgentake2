@@ -241,30 +241,22 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
   }, [mapId, scaleTitle, minLabel, maxLabel, tooltipDescription]);
 
   const generateEmbedCode = () => {
+    // Direct URL to the embed page - without hash marks
+    const baseUrl = "https://map-generator-umber.vercel.app";
+    
+    // Build query parameters
     const params = new URLSearchParams();
-    
-    // Add map ID if available
-    if (mapId) {
-      params.append('id', mapId);
-    }
-    
-    // Add customization parameters
+    if (mapId) params.append('id', mapId);
     if (scaleTitle) params.append('scaleTitle', scaleTitle);
     if (minLabel) params.append('minLabel', minLabel);
     if (maxLabel) params.append('maxLabel', maxLabel);
     if (tooltipDescription) params.append('tooltipDescription', tooltipDescription);
     
-    // Use production URL when deployed, otherwise use current URL
-    const baseUrl = isLocalhost 
-      ? 'http://localhost:3001'
-      : 'https://map-generator-umber.vercel.app';
-    
     const queryString = params.toString() ? `?${params.toString()}` : '';
-    // Ensure no hash (#) characters in the URL
     const embedUrl = `${baseUrl}/embed${queryString}`;
     
-    // Simple, Shopify-compatible iframe code with no extra attributes
-    return `<iframe style="aspect-ratio: 16/9; width: 100%;" src="${embedUrl}"></iframe>`;
+    // Simple iframe format that works well with Shopify
+    return `<iframe src="${embedUrl}" width="100%" style="min-height:500px" frameborder="0" allowfullscreen></iframe>`;
   };
   
   const handleCopyCode = () => {
