@@ -241,17 +241,10 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
   }, [mapId, scaleTitle, minLabel, maxLabel]);
 
   const generateEmbedCode = () => {
-    // Build the URL with all necessary parameters
-    const params = new URLSearchParams();
-    if (mapId) params.append('id', mapId);
-    if (scaleTitle) params.append('scaleTitle', scaleTitle);
-    if (minLabel) params.append('minLabel', minLabel);
-    if (maxLabel) params.append('maxLabel', maxLabel);
+    // Use the simplest possible embed URL
+    const embedUrl = `https://map-generator-take2.vercel.app/simple-map.html`;
     
-    const queryString = params.toString() ? `?${params.toString()}` : '';
-    const embedUrl = `https://map-generator-take2.vercel.app/standalone-map.html${queryString}`;
-    
-    console.log("Generated embed code with mapId:", mapId);
+    console.log("Generated simple embed code");
     return `<iframe src="${embedUrl}" width="100%" style="min-height:500px" frameborder="0" allowfullscreen></iframe>`;
   };
   

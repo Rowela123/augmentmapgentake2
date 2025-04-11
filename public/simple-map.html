@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple US Map</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+    }
+    .map-container {
+      width: 100%;
+      height: 500px;
+      overflow: hidden;
+    }
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+    .state {
+      fill: #ddd;
+      stroke: white;
+      stroke-width: 1;
+    }
+    .state:hover {
+      fill: #aaa;
+    }
+    .legend {
+      margin-top: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 12px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin: 0 10px;
+    }
+    .legend-color {
+      width: 20px;
+      height: 20px;
+      margin-right: 5px;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <div class="map-container">
+    <svg viewBox="0 0 950 600">
+      <!-- Basic SVG map of US -->
+      <path class="state" d="M 221 350 L 221 345 L 226 345 L 226 335 L 204 335 L 204 365 L 226 365 L 226 350 Z" id="AL"></path>
+      <path class="state" d="M 180 380 L 150 380 L 150 400 L 180 400 Z" id="AZ"></path>
+      <path class="state" d="M 250 350 L 250 330 L 230 330 L 230 350 Z" id="AR"></path>
+      <path class="state" d="M 130 350 L 100 300 L 100 350 L 130 400 Z" id="CA"></path>
+      <path class="state" d="M 180 320 L 200 300 L 180 300 L 160 320 Z" id="CO"></path>
+      <path class="state" d="M 330 300 L 340 300 L 340 290 L 330 290 Z" id="CT"></path>
+      <path class="state" d="M 330 310 L 340 310 L 340 315 L 330 315 Z" id="DE"></path>
+      <path class="state" d="M 270 380 L 290 380 L 290 350 L 280 350 L 280 360 L 270 360 Z" id="FL"></path>
+      <path class="state" d="M 270 340 L 270 320 L 250 320 L 250 340 Z" id="GA"></path>
+      <path class="state" d="M 80 400 L 100 400 L 100 380 L 80 380 Z" id="HI"></path>
+      <path class="state" d="M 150 280 L 160 260 L 140 260 L 150 280 Z" id="ID"></path>
+      <path class="state" d="M 240 310 L 260 300 L 240 290 L 220 300 Z" id="IL"></path>
+      <path class="state" d="M 260 300 L 270 300 L 270 280 L 260 280 Z" id="IN"></path>
+      <path class="state" d="M 220 290 L 240 280 L 220 270 L 200 280 Z" id="IA"></path>
+      <path class="state" d="M 200 310 L 220 300 L 200 290 L 180 300 Z" id="KS"></path>
+      <path class="state" d="M 240 320 L 260 310 L 240 310 L 230 320 Z" id="KY"></path>
+      <path class="state" d="M 220 360 L 240 350 L 220 340 L 200 350 Z" id="LA"></path>
+      <path class="state" d="M 350 260 L 350 250 L 340 250 L 340 260 Z" id="ME"></path>
+      <path class="state" d="M 320 310 L 340 300 L 320 300 L 310 310 Z" id="MD"></path>
+      <path class="state" d="M 340 290 L 350 280 L 330 280 L 340 290 Z" id="MA"></path>
+      <path class="state" d="M 270 270 L 250 260 L 250 280 L 270 290 Z" id="MI"></path>
+      <path class="state" d="M 220 260 L 240 250 L 210 250 L 200 260 Z" id="MN"></path>
+      <path class="state" d="M 220 340 L 250 330 L 220 330 L 220 340 Z" id="MS"></path>
+      <path class="state" d="M 220 310 L 240 300 L 220 290 L 210 310 Z" id="MO"></path>
+      <path class="state" d="M 180 260 L 200 240 L 180 240 L 160 260 Z" id="MT"></path>
+      <path class="state" d="M 180 300 L 200 290 L 180 280 L 160 290 Z" id="NE"></path>
+      <path class="state" d="M 140 330 L 160 310 L 140 310 L 120 330 Z" id="NV"></path>
+      <path class="state" d="M 340 280 L 350 280 L 350 270 L 340 270 Z" id="NH"></path>
+      <path class="state" d="M 330 300 L 340 300 L 340 290 L 330 290 Z" id="NJ"></path>
+      <path class="state" d="M 160 350 L 180 330 L 160 330 L 140 350 Z" id="NM"></path>
+      <path class="state" d="M 320 290 L 350 280 L 320 270 L 310 290 Z" id="NY"></path>
+      <path class="state" d="M 300 330 L 270 320 L 270 340 L 300 340 Z" id="NC"></path>
+      <path class="state" d="M 210 250 L 220 240 L 200 240 L 210 250 Z" id="ND"></path>
+      <path class="state" d="M 280 290 L 300 290 L 300 270 L 280 270 Z" id="OH"></path>
+      <path class="state" d="M 200 330 L 220 320 L 200 320 L 180 330 Z" id="OK"></path>
+      <path class="state" d="M 120 270 L 140 250 L 120 250 L 100 270 Z" id="OR"></path>
+      <path class="state" d="M 310 290 L 330 290 L 330 270 L 310 270 Z" id="PA"></path>
+      <path class="state" d="M 350 290 L 350 300 L 340 300 L 340 290 Z" id="RI"></path>
+      <path class="state" d="M 290 340 L 270 340 L 270 320 L 290 320 Z" id="SC"></path>
+      <path class="state" d="M 210 260 L 220 250 L 200 250 L 210 260 Z" id="SD"></path>
+      <path class="state" d="M 240 330 L 260 320 L 240 320 L 230 330 Z" id="TN"></path>
+      <path class="state" d="M 180 370 L 220 340 L 180 340 L 150 370 Z" id="TX"></path>
+      <path class="state" d="M 150 300 L 170 280 L 150 280 L 130 300 Z" id="UT"></path>
+      <path class="state" d="M 340 280 L 350 270 L 330 270 L 340 280 Z" id="VT"></path>
+      <path class="state" d="M 300 320 L 320 310 L 300 310 L 290 320 Z" id="VA"></path>
+      <path class="state" d="M 110 260 L 140 240 L 110 240 L 90 260 Z" id="WA"></path>
+      <path class="state" d="M 290 300 L 310 300 L 310 290 L 290 290 Z" id="WV"></path>
+      <path class="state" d="M 240 270 L 260 260 L 240 250 L 230 270 Z" id="WI"></path>
+      <path class="state" d="M 160 280 L 180 260 L 160 260 L 140 280 Z" id="WY"></path>
+      <path class="state" d="M 320 310 L 330 300 L 320 300 L 310 310 Z" id="DC"></path>
+      <path class="state" d="M 60 200 L 120 200 L 120 150 L 60 150 Z" id="AK"></path>
+    </svg>
+  </div>
+  
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-color" style="background-color: #edf8fb;"></div>
+      <span>Low</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color" style="background-color: #b3cde3;"></div>
+      <span></span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color" style="background-color: #8c96c6;"></div>
+      <span></span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color" style="background-color: #8856a7;"></div>
+      <span></span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color" style="background-color: #810f7c;"></div>
+      <span>High</span>
+    </div>
+  </div>
+
+  <script>
+    // Simple coloring based on location
+    const states = document.querySelectorAll('.state');
+    const colors = ['#edf8fb', '#b3cde3', '#8c96c6', '#8856a7', '#810f7c'];
+    
+    states.forEach(state => {
+      // Simple deterministic coloring based on state position
+      const bbox = state.getBBox();
+      const x = bbox.x;
+      const y = bbox.y;
+      const colorIndex = Math.floor((x + y) / 100) % 5;
+      state.style.fill = colors[colorIndex];
+      
+      // Add hover tooltip
+      state.addEventListener('mouseover', (e) => {
+        const stateId = state.id;
+        const tooltip = document.createElement('div');
+        tooltip.className = 'tooltip';
+        tooltip.style.position = 'absolute';
+        tooltip.style.left = (e.pageX + 10) + 'px';
+        tooltip.style.top = (e.pageY - 20) + 'px';
+        tooltip.style.background = 'white';
+        tooltip.style.padding = '5px 10px';
+        tooltip.style.border = '1px solid #ccc';
+        tooltip.style.borderRadius = '3px';
+        tooltip.style.zIndex = '1000';
+        tooltip.innerHTML = `<strong>${stateId}</strong>`;
+        document.body.appendChild(tooltip);
+        
+        state.addEventListener('mouseout', () => {
+          document.body.removeChild(tooltip);
+        }, { once: true });
+      });
+    });
+  </script>
+</body>
+</html> 
