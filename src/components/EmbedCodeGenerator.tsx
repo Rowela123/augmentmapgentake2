@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
+import { getMapById } from '../utils/storageUtils';
 
 interface EmbedCodeGeneratorProps {
   title: string;
@@ -242,7 +243,25 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
   const generateEmbedCode = () => {
     // Build query parameters
     const params = new URLSearchParams();
-    if (mapId) params.append('id', mapId);
+    
+    // Include the map ID
+    if (mapId) {
+      params.append('id', mapId);
+      
+      // Get the actual map data to include in the URL
+      try {
+        const mapData = getMapById(mapId);
+        if (mapData) {
+          // Convert map data to a Base64 string to keep the URL shorter
+          const compressedData = btoa(JSON.stringify(mapData.data));
+          params.append('mapData', compressedData);
+          params.append('mapTitle', mapData.title || '');
+        }
+      } catch (error) {
+        console.error("Error getting map data:", error);
+      }
+    }
+    
     if (scaleTitle) params.append('scaleTitle', scaleTitle);
     if (minLabel) params.append('minLabel', minLabel);
     if (maxLabel) params.append('maxLabel', maxLabel);

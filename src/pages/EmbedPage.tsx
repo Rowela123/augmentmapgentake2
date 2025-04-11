@@ -83,7 +83,28 @@ const EmbedPage: React.FC = () => {
     if (tabs) (tabs as HTMLElement).style.display = 'none';
     
     try {
-      // Try to load specific map if ID provided
+      // First, try to get map data directly from URL
+      const mapDataParam = searchParams.get('mapData');
+      const mapTitleParam = searchParams.get('mapTitle');
+      
+      if (mapDataParam) {
+        try {
+          // Decode the base64 data to get the map data
+          const decodedData = atob(mapDataParam);
+          const parsedData = JSON.parse(decodedData);
+          
+          if (Array.isArray(parsedData) && parsedData.length > 0) {
+            setMapData(parsedData);
+            setMapTitle(mapTitleParam || '');
+            setLoading(false);
+            return;
+          }
+        } catch (decodeErr) {
+          console.error('Error decoding map data from URL:', decodeErr);
+        }
+      }
+      
+      // If no direct data, try to load specific map if ID provided
       if (mapId) {
         const savedMap = getMapById(mapId);
         
@@ -108,7 +129,7 @@ const EmbedPage: React.FC = () => {
       setError('Failed to load map data');
       setLoading(false);
     }
-  }, [mapId]);
+  }, [mapId, searchParams]);
 
   // Render ONLY the map component with fullscreen styles
   return (
