@@ -250,6 +250,7 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
     const queryString = params.toString() ? `?${params.toString()}` : '';
     const embedUrl = `https://map-generator-take2.vercel.app/embed${queryString}`;
     
+    console.log("Generated embed code with mapId:", mapId);
     return `<iframe src="${embedUrl}" width="100%" style="min-height:500px" frameborder="0" allowfullscreen></iframe>`;
   };
   
