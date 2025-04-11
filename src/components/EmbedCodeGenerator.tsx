@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { getMapById } from '../utils/storageUtils';
 import { StateData } from '../types';
-import { saveMapToServer } from '../utils/apiUtils';
 
 interface EmbedCodeGeneratorProps {
   title: string;
@@ -221,7 +220,7 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
   const [width, setWidth] = useState<number>(900);
   const [responsive, setResponsive] = useState<boolean>(true);
   const [copied, setCopied] = useState<boolean>(false);
-  const [notification, setNotification] = useState<string | null>(null);
+  const [notification, setNotification] = useState<{ message: string; type: string } | null>(null);
   const [embedCode, setEmbedCode] = useState<string>('');
   const [hasRendered, setHasRendered] = useState<boolean>(false);
   
@@ -298,9 +297,8 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
       const params = new URLSearchParams();
       let mapData = null;
       
-      // Try to get map data either from props or localStorage
+      // Get map data either from props or localStorage
       if (stateData && stateData.length > 0) {
-        // Use provided stateData directly
         mapData = stateData;
         console.log('Using provided stateData:', stateData.length, 'states');
       } else if (mapId) {
@@ -318,7 +316,7 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
         return 'Error: No map data available. Please create a map first.';
       }
       
-      // Always include the map data in the URL to ensure it works when embedded on external sites
+      // Include data in the URL parameters
       if (mapData) {
         // Safely encode the data, handling Unicode characters
         const jsonString = JSON.stringify(mapData);
@@ -331,14 +329,7 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
         }
         
         // Include the title if available
-        if (mapId) {
-          const savedMap = getMapById(mapId);
-          if (savedMap && savedMap.title) {
-            params.append('title', savedMap.title);
-          } else if (title) {
-            params.append('title', title);
-          }
-        } else if (title) {
+        if (title) {
           params.append('title', title);
         }
         
@@ -352,10 +343,8 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
         const queryString = params.toString() ? `?${params.toString()}` : '';
         const embedUrl = `${baseUrl}/embed${queryString}`;
         
-        console.log("Generated embed URL with data included");
-        
-        // Return a simple iframe code that works in Shopify
-        return `<iframe src="${embedUrl}" width="100%" height="500" frameborder="0" allowfullscreen></iframe>`;
+        // Return a simple iframe code with aspect-ratio styling like Columns.ai
+        return `<iframe style="aspect-ratio: 16/9; width: 100%;" src="${embedUrl}" frameborder="0" allowfullscreen></iframe>`;
       } else {
         return 'Error: Could not generate embed code. No map data available.';
       }
@@ -367,59 +356,36 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
   
   const handleCopyCode = () => {
     navigator.clipboard.writeText(embedCode);
-    setNotification('Embed code copied to clipboard!');
+    setNotification({
+      message: 'Embed code copied to clipboard!',
+      type: 'success',
+    });
   };
 
   // Save map to server to get a short URL
   const saveMapToServerAndGenerateCode = async () => {
-    if (!stateData || stateData.length === 0) {
-      setNotification('No data available to save');
+    if (!mapId) {
+      setNotification({
+        message: 'No map data available. Please create a map first.',
+        type: 'error',
+      });
       return;
     }
     
     try {
-      setIsLoading(true);
-      
-      // Generate a simple random ID like Columns.ai
-      const generateShortId = () => {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        let id = '';
-        for (let i = 0; i < 11; i++) {
-          id += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        return id;
-      };
-      
-      const shortId = generateShortId();
-      setServerMapId(shortId);
-      
-      // Store data in localStorage using the shortId
-      const compactData = btoa(unescape(encodeURIComponent(JSON.stringify({
-        id: shortId,
-        title: title || 'US Map',
-        scale: scaleTitle,
-        min: minLabel,
-        max: maxLabel,
-        data: stateData
-      }))));
-      
-      // Store in localStorage for the columnsEmbed.html page to access
-      localStorage.setItem(`map_${shortId}`, compactData);
-      
-      // Create the embed code with a direct path to the standalone HTML file
-      const baseUrl = window.location.origin;
-      const embedUrl = `${baseUrl}/columnsEmbed.html/${shortId}`;
-      
-      // Create an iframe with aspect-ratio styling exactly like Columns.ai
-      const newEmbedCode = `<iframe style="aspect-ratio: 16/9; width: 100%;" src="${embedUrl}" frameborder="0" allowfullscreen></iframe>`;
-      setEmbedCode(newEmbedCode);
-      
-      setNotification('Short embed code generated!');
+      // No longer using server API, simply generate the embed code
+      const embedCode = generateEmbedCode();
+      setEmbedCode(embedCode);
+      setNotification({
+        message: 'Embed code generated successfully!',
+        type: 'success',
+      });
     } catch (error) {
-      console.error('Error generating short embed code:', error);
-      setNotification('Error generating code. Please try again.');
-    } finally {
-      setIsLoading(false);
+      console.error('Error generating embed code:', error);
+      setNotification({
+        message: 'Error generating embed code. Please try again.',
+        type: 'error',
+      });
     }
   };
 
@@ -544,7 +510,7 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
       
       {notification && (
         <NotificationMessage>
-          {notification}
+          {notification.message}
         </NotificationMessage>
       )}
     </Container>
