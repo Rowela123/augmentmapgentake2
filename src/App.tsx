@@ -322,11 +322,18 @@ function MainApp() {
           <DataUploader onDataUpload={handleDataUpload} />
         )}
         {activeTab === 'embed' && (
-          <EmbedCodeGenerator
-            title={mapTitle}
-            mapId={currentMapId || ''}
-            stateData={stateData}
-          />
+          <>
+            {console.log('Rendering EmbedCodeGenerator with:', { 
+              mapId: currentMapId || '', 
+              title: mapTitle,
+              stateDataLength: stateData?.length || 0 
+            })}
+            <EmbedCodeGenerator
+              title={mapTitle}
+              mapId={currentMapId || ''}
+              stateData={stateData}
+            />
+          </>
         )}
       </Content>
       
