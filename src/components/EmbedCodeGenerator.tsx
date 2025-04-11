@@ -241,8 +241,18 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
   }, [mapId, scaleTitle, minLabel, maxLabel, tooltipDescription]);
 
   const generateEmbedCode = () => {
-    // Hard-coded, known-working iframe code format that works with Shopify
-    return `<iframe src="https://map-generator-umber.vercel.app/embed" width="100%" style="min-height:500px" frameborder="0" allowfullscreen></iframe>`;
+    // Build query parameters
+    const params = new URLSearchParams();
+    if (mapId) params.append('id', mapId);
+    if (scaleTitle) params.append('scaleTitle', scaleTitle);
+    if (minLabel) params.append('minLabel', minLabel);
+    if (maxLabel) params.append('maxLabel', maxLabel);
+    if (tooltipDescription) params.append('tooltipDescription', tooltipDescription);
+    
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+    const embedUrl = `https://map-generator-umber.vercel.app/embed${queryString}`;
+    
+    return `<iframe src="${embedUrl}" width="100%" style="min-height:500px" frameborder="0" allowfullscreen></iframe>`;
   };
   
   const handleCopyCode = () => {
