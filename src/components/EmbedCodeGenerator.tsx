@@ -251,15 +251,21 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
       // Get the actual map data to include directly in the URL
       try {
         const mapData = getMapById(mapId);
+        console.log('Retrieved map data:', mapData);
         if (mapData && mapData.data) {
           // Compress the data to keep the URL shorter
           const compressedData = btoa(JSON.stringify(mapData.data));
           params.append('data', compressedData);
           params.append('title', mapData.title || '');
+          console.log('Added data parameter with length:', compressedData.length);
+        } else {
+          console.error('No map data found for mapId:', mapId);
         }
       } catch (error) {
         console.error("Error getting map data:", error);
       }
+    } else {
+      console.warn('No mapId provided to generateEmbedCode');
     }
     
     if (scaleTitle) params.append('scaleTitle', scaleTitle);
@@ -281,6 +287,14 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId })
   return (
     <Container>
       <PageTitle>Get Embed Code</PageTitle>
+      
+      {/* Debug information */}
+      <div style={{ marginBottom: '20px', padding: '10px', background: '#f0f0f0', border: '1px solid #ddd', borderRadius: '4px' }}>
+        <p><strong>Debug Info:</strong></p>
+        <p>Map ID: {mapId || 'None'}</p>
+        <p>Using map data: {mapId ? 'Yes' : 'No'}</p>
+        <p>Last update: {new Date().toLocaleTimeString()}</p>
+      </div>
       
       <OptionGroup>
         <SectionTitle>Map Settings</SectionTitle>

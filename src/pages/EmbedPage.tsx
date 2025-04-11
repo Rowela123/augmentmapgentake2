@@ -82,6 +82,15 @@ const EmbedPage: React.FC = () => {
     const tabs = document.querySelector('[class*="Tabs"]');
     if (tabs) (tabs as HTMLElement).style.display = 'none';
     
+    console.log('EmbedPage: Received URL parameters:', {
+      mapId,
+      dataParam: searchParams.get('data') ? `[${searchParams.get('data')?.substring(0, 20)}...]` : 'None',
+      titleParam: searchParams.get('title'),
+      scaleTitle,
+      minLabel,
+      maxLabel
+    });
+    
     try {
       // Try to get data from URL parameters first
       const dataParam = searchParams.get('data');
@@ -91,9 +100,11 @@ const EmbedPage: React.FC = () => {
         try {
           // Decode the base64-encoded data
           const jsonData = atob(dataParam);
+          console.log('Decoded data from URL (first 100 chars):', jsonData.substring(0, 100));
           const parsedData = JSON.parse(jsonData);
           
           if (Array.isArray(parsedData) && parsedData.length > 0) {
+            console.log(`Successfully parsed data from URL: ${parsedData.length} states`);
             setMapData(parsedData);
             setMapTitle(titleParam || '');
             setLoading(false);
@@ -105,6 +116,7 @@ const EmbedPage: React.FC = () => {
       }
       
       // Fallback to sample data if URL doesn't contain map data
+      console.log('Falling back to sample data');
       setMapData(sideHustleData);
       setMapTitle('US States Data Visualization');
       setLoading(false);
