@@ -230,7 +230,6 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
   const [maxLabel, setMaxLabel] = useState<string>('High');
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [serverMapId, setServerMapId] = useState<string | null>(null);
 
   // Mark component as rendered on first render
   useEffect(() => {
@@ -397,7 +396,6 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
       <div style={{ marginBottom: '20px', padding: '10px', background: '#f0f0f0', border: '1px solid #ddd', borderRadius: '4px' }}>
         <p><strong>Debug Info:</strong></p>
         <p>Map ID: {mapId || 'None'}</p>
-        <p>Server Map ID: {serverMapId || 'None'}</p>
         <p>States with data: {stateData?.length || 0}</p>
         <p>Domain: {window.location.origin}</p>
         <p>Last updated: {new Date().toLocaleTimeString()}</p>
@@ -473,14 +471,12 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
                     <CopyIcon />
                     Copy Code
                   </Button>
-                  {!serverMapId && (
-                    <Button 
-                      onClick={saveMapToServerAndGenerateCode}
-                      style={{ background: '#4caf50' }}
-                    >
-                      Generate Short Embed Code
-                    </Button>
-                  )}
+                  <Button 
+                    onClick={saveMapToServerAndGenerateCode}
+                    style={{ background: '#4caf50' }}
+                  >
+                    Generate Embed Code
+                  </Button>
                 </div>
               </>
             ) : (
@@ -498,9 +494,6 @@ const EmbedCodeGenerator: React.FC<EmbedCodeGeneratorProps> = ({ title, mapId, s
           <li>Copy the embed code above</li>
           <li>Paste it into your Shopify page or blog post</li>
           <li>The map will automatically adjust to fit the width of its container</li>
-          {serverMapId && (
-            <li><strong>Note:</strong> You're using a short embed code that works just like Columns.ai!</li>
-          )}
         </InstructionList>
         <Note>
           Note: The map will be responsive and adjust to the width of its container.
