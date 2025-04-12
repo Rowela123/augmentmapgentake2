@@ -7,51 +7,18 @@
       "config": {
         "distDir": "build"
       }
-    },
-    {
-      "src": "api/**/*.js",
-      "use": "@vercel/node"
     }
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "src": "/map/([^/]+)$",
-      "dest": "/shortEmbed.html"
-    },
-    {
-      "src": "^/static/(.*)",
-      "dest": "/static/$1"
-    },
-    {
-      "src": "/(.*)\\.png",
-      "dest": "/$1.png"
-    },
-    {
-      "src": "/(.*)\\.json",
-      "dest": "/$1.json"
-    },
-    {
-      "src": "/(.*)\\.ico",
-      "dest": "/$1.ico"
-    },
-    {
-      "src": "/(.*)\\.html",
-      "dest": "/$1.html"
-    },
-    {
-      "src": "/(.*)\\.(js|css|map|txt)",
-      "dest": "/$1.$2"
-    },
-    {
-      "src": "/embed/(.*)",
-      "dest": "/index.html"
-    },
-    {
       "src": "/(.*)",
+      "dest": "/$1"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/.*",
       "dest": "/index.html"
     }
   ],
