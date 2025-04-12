@@ -1,4 +1,5 @@
+// Export all page components
 import EmbedPage from './EmbedPage';
-import TestPage from './TestPage';
+import ServerEmbedPage from './ServerEmbedPage';
 
-export { EmbedPage, TestPage }; 
+export { EmbedPage, ServerEmbedPage }; 
