@@ -1,29 +1,81 @@
 import * as d3 from 'd3';
 
-export const COLOR_SCHEMES = {
-  default: ['#f7fbff', '#08519c'],
-  blues: ['#f7fbff', '#034e7b'],  // Deep blue scheme
+/**
+ * Generate a color scale function using D3
+ * @param colors Array of colors to interpolate between
+ * @param min Minimum data value
+ * @param max Maximum data value
+ * @returns A function that takes a value and returns a color
+ */
+export const generateColorScale = (colors: string[], min: number, max: number) => {
+  const scale = d3.scaleLinear<string>()
+    .domain([min, max])
+    .range(colors as any)
+    .clamp(true);
+  
+  return (value: number) => scale(value);
 };
 
 /**
- * Generates a color scale based on the provided color scheme and value range.
- * @param colorScheme Array of colors defining the color scheme
- * @param minValue Minimum value in the data range
- * @param maxValue Maximum value in the data range
- * @returns A function that maps values to colors
+ * Get a predefined color scheme by name
+ * @param scheme Name of the color scheme
+ * @returns Array of colors
  */
-export const generateColorScale = (
-  colorScheme: string[] = COLOR_SCHEMES.default,
-  minValue: number = 0, 
-  maxValue: number = 100
-): ((value: number) => string) => {
-  // Create a linear scale with D3
-  const scale = d3.scaleLinear<string>()
-    .domain([minValue, maxValue])
-    .range(colorScheme as any) // Cast needed due to TypeScript constraints
-    .clamp(true);
+export const getColorScheme = (scheme: string): string[] => {
+  const schemes: Record<string, string[]> = {
+    'default': ['#e5f5e0', '#31a354'],
+    'blues': ['#f7fbff', '#08519c'],
+    'reds': ['#fee5d9', '#a50f15'],
+    'purples': ['#efedf5', '#54278f'],
+    'oranges': ['#fef0d9', '#d94701']
+  };
+  
+  return schemes[scheme] || schemes.default;
+};
 
-  return (value: number) => scale(value);
+/**
+ * Calculate a suitable range for a color scale based on data
+ * @param data Array of numeric values
+ * @returns Object with min and max values
+ */
+export const calculateDataRange = (data: number[]): { min: number; max: number } => {
+  if (!data || data.length === 0) {
+    return { min: 0, max: 100 };
+  }
+  
+  // Filter out undefined/null values and get valid numbers
+  const validData = data.filter(d => d !== undefined && d !== null && !isNaN(d));
+  
+  if (validData.length === 0) {
+    return { min: 0, max: 100 };
+  }
+  
+  const min = Math.min(...validData);
+  const max = Math.max(...validData);
+  
+  // If min and max are the same, create a small range
+  if (min === max) {
+    return { 
+      min: min === 0 ? 0 : min * 0.9, 
+      max: max === 0 ? 100 : max * 1.1 
+    };
+  }
+  
+  return { min, max };
+};
+
+/**
+ * Format a number for display with dollar sign and commas
+ * @param value Number to format
+ * @returns Formatted string
+ */
+export const formatCurrency = (value: number): string => {
+  if (value === undefined || value === null || isNaN(value)) {
+    return '$0';
+  }
+  
+  // Format with commas
+  return `$${value.toLocaleString()}`;
 };
 
 /**
