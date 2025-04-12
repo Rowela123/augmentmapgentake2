@@ -7,7 +7,9 @@ import DataUploader from './components/DataUploader';
 import EmbedCodeGenerator from './components/EmbedCodeGenerator';
 import SavedMaps from './components/SavedMaps';
 import SaveMapModal from './components/SaveMapModal';
-import { EmbedPage, TestPage } from './pages';
+import EmbedPage from './pages/EmbedPage';
+import TestPage from './pages/TestPage';
+import ServerEmbedPage from './pages/ServerEmbedPage';
 import { StateData, SavedMap } from './types';
 import { sideHustleData } from './data/sampleData';
 import {
@@ -362,6 +364,7 @@ function App() {
         <Route path="/" element={<MainApp />} />
         <Route path="/embed" element={<EmbedPage />} />
         <Route path="/test" element={<TestPage />} />
+        <Route path="/embed/:id" element={<ServerEmbedPage />} />
       </Routes>
     </BrowserRouter>
   );

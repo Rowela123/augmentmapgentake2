@@ -1,10 +1,11 @@
 import React from 'react';
 import ColorLegend from '../components/ColorLegend';
-import { generateColorScale } from '../utils/colorUtils';
+import { generateColorScale, getColorScheme } from '../utils/colorUtils';
 
 const TestPage: React.FC = () => {
-  // Simple mock color scale for testing
-  const colorScale = generateColorScale(['#f7fbff', '#08519c'], 0, 5000);
+  // Get color scheme and generate a scale
+  const colors = getColorScheme('blues');
+  const colorScale = generateColorScale(colors, 0, 5000);
   
   return (
     <div style={{ 
@@ -15,12 +16,17 @@ const TestPage: React.FC = () => {
       <h1>Legend Test Page</h1>
       <p>This page tests the legend component in isolation.</p>
       
-      <ColorLegend 
-        colorScale={colorScale}
-        width={960}
-        minValue={630}
-        maxValue={5245}
-      />
+      <div style={{ marginTop: '30px' }}>
+        <ColorLegend 
+          colorScale={colorScale}
+          width={600}
+          minValue={630}
+          maxValue={5245}
+          title="Monthly Income ($)"
+          minLabel="Min"
+          maxLabel="Max"
+        />
+      </div>
       
       <div style={{ 
         marginTop: '30px',
