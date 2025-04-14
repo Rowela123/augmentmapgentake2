@@ -1,10 +1,8 @@
 {
-  "routes": [
-    { "src": "/embed", "dest": "/index.html" },
-    { "src": "/test", "dest": "/index.html" },
-    { "src": "/(.*)", "dest": "/$1" },
-    { "handle": "filesystem" },
-    { "src": "/.*", "dest": "/index.html" }
+  "rewrites": [
+    { "source": "/embed", "destination": "/index.html" },
+    { "source": "/embed/:id", "destination": "/index.html" },
+    { "source": "/test", "destination": "/index.html" }
   ],
   "headers": [
     {
