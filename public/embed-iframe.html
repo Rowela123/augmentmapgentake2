@@ -19,10 +19,24 @@
       height: 100%;
       border: none;
     }
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(255, 255, 255, 0.8);
+      z-index: 10;
+      font-family: Arial, sans-serif;
+    }
   </style>
 </head>
 <body>
-  <iframe id="map-iframe" src="" frameborder="0" allowfullscreen></iframe>
+  <div id="loading-indicator" class="loading">Loading map...</div>
+  <iframe id="map-iframe" src="" frameborder="0" allowfullscreen onload="hideLoading()"></iframe>
 
   <script>
     // Get the map ID from the URL parameters
@@ -35,6 +49,11 @@
       iframe.src = `/embed?id=${mapId}`;
     } else {
       iframe.src = '/embed';
+    }
+    
+    // Hide loading indicator once iframe is loaded
+    function hideLoading() {
+      document.getElementById('loading-indicator').style.display = 'none';
     }
   </script>
 </body>
