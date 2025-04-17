@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>US Map Embed</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://unpkg.com/topojson-client@3"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        .map-container {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+        }
+        .tooltip {
+            position: absolute;
+            background-color: white;
+            border-radius: 8px;
+            padding: 0;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            max-width: 300px;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        .tooltip-header {
+            padding: 12px 15px;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+        }
+        .tooltip-header .state-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            color: #333;
+            font-size: 12px;
+        }
+        .tooltip-body {
+            padding: 15px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .tooltip-body p {
+            margin: 0 0 8px 0;
+        }
+        .tooltip-body ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        h2 {
+            margin: 0;
+            padding: 10px;
+            text-align: center;
+            color: #2a6099;
+        }
+    </style>
+</head>
+<body>
+    <h2 id="map-title">US Map</h2>
+    <div class="map-container">
+        <svg id="map" width="100%" height="100%"></svg>
+        <div class="tooltip" id="tooltip"></div>
+    </div>
+
+    <script>
+        // Get map ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const mapId = urlParams.get('id');
+
+        // Default map data
+        let mapData = {
+            stateData: [],
+            colorScheme: 'green-to-red',
+            title: 'US Map',
+            legendTitle: 'Value',
+            legendMinLabel: 'Low',
+            legendMaxLabel: 'High',
+            showLabels: true,
+            customColors: {}
+        };
+
+        // Try to load map data from localStorage
+        if (mapId) {
+            const savedData = localStorage.getItem(`map_${mapId}`);
+            if (savedData) {
+                try {
+                    mapData = JSON.parse(savedData);
+                    // Update title
+                    document.getElementById('map-title').textContent = mapData.title || 'US Map';
+                    document.title = mapData.title || 'US Map';
+                } catch (error) {
+                    console.error('Error loading map data:', error);
+                }
+            }
+        }
+
+        // Initialize map
+        document.addEventListener('DOMContentLoaded', () => {
+            initMap();
+        });
+
+        // Initialize map
+        function initMap() {
+            // Load US TopoJSON data
+            d3.json('https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json')
+                .then(us => {
+                    // Convert TopoJSON to GeoJSON
+                    const statesFeatures = topojson.feature(us, us.objects.states).features;
+
+                    // Add state names
+                    statesFeatures.forEach(state => {
+                        const stateId = state.id;
+                        // Convert numeric IDs to state codes
+                        const stateInfo = getStateInfoFromId(stateId);
+                        if (stateInfo) {
+                            state.properties.code = stateInfo.code;
+                            state.properties.name = stateInfo.name;
+                        }
+                    });
+
+                    // Draw the map
+                    drawMap(statesFeatures);
+                })
+                .catch(error => {
+                    console.error('Error loading US map data:', error);
+                });
+        }
+
+        // Helper function to convert numeric state IDs to state codes
+        function getStateInfoFromId(id) {
+            // State mapping
+            const stateMapping = {
+                "01": { code: "AL", name: "Alabama" },
+                "02": { code: "AK", name: "Alaska" },
+                "04": { code: "AZ", name: "Arizona" },
+                "05": { code: "AR", name: "Arkansas" },
+                "06": { code: "CA", name: "California" },
+                "08": { code: "CO", name: "Colorado" },
+                "09": { code: "CT", name: "Connecticut" },
+                "10": { code: "DE", name: "Delaware" },
+                "11": { code: "DC", name: "District of Columbia" },
+                "12": { code: "FL", name: "Florida" },
+                "13": { code: "GA", name: "Georgia" },
+                "15": { code: "HI", name: "Hawaii" },
+                "16": { code: "ID", name: "Idaho" },
+                "17": { code: "IL", name: "Illinois" },
+                "18": { code: "IN", name: "Indiana" },
+                "19": { code: "IA", name: "Iowa" },
+                "20": { code: "KS", name: "Kansas" },
+                "21": { code: "KY", name: "Kentucky" },
+                "22": { code: "LA", name: "Louisiana" },
+                "23": { code: "ME", name: "Maine" },
+                "24": { code: "MD", name: "Maryland" },
+                "25": { code: "MA", name: "Massachusetts" },
+                "26": { code: "MI", name: "Michigan" },
+                "27": { code: "MN", name: "Minnesota" },
+                "28": { code: "MS", name: "Mississippi" },
+                "29": { code: "MO", name: "Missouri" },
+                "30": { code: "MT", name: "Montana" },
+                "31": { code: "NE", name: "Nebraska" },
+                "32": { code: "NV", name: "Nevada" },
+                "33": { code: "NH", name: "New Hampshire" },
+                "34": { code: "NJ", name: "New Jersey" },
+                "35": { code: "NM", name: "New Mexico" },
+                "36": { code: "NY", name: "New York" },
+                "37": { code: "NC", name: "North Carolina" },
+                "38": { code: "ND", name: "North Dakota" },
+                "39": { code: "OH", name: "Ohio" },
+                "40": { code: "OK", name: "Oklahoma" },
+                "41": { code: "OR", name: "Oregon" },
+                "42": { code: "PA", name: "Pennsylvania" },
+                "44": { code: "RI", name: "Rhode Island" },
+                "45": { code: "SC", name: "South Carolina" },
+                "46": { code: "SD", name: "South Dakota" },
+                "47": { code: "TN", name: "Tennessee" },
+                "48": { code: "TX", name: "Texas" },
+                "49": { code: "UT", name: "Utah" },
+                "50": { code: "VT", name: "Vermont" },
+                "51": { code: "VA", name: "Virginia" },
+                "53": { code: "WA", name: "Washington" },
+                "54": { code: "WV", name: "West Virginia" },
+                "55": { code: "WI", name: "Wisconsin" },
+                "56": { code: "WY", name: "Wyoming" }
+            };
+
+            return stateMapping[id];
+        }
+
+        // Draw the map
+        function drawMap(statesFeatures) {
+            if (statesFeatures.length === 0) return;
+
+            const svg = d3.select('#map');
+            const width = svg.node().clientWidth;
+            const height = svg.node().clientHeight;
+
+            // Clear previous content
+            svg.selectAll('*').remove();
+
+            // Create projection
+            const projection = d3.geoAlbersUsa()
+                .fitSize([width, height], { type: 'FeatureCollection', features: statesFeatures });
+
+            // Create path generator
+            const pathGenerator = d3.geoPath().projection(projection);
+
+            // Create color scale
+            let colorScale;
+            const colorScheme = mapData.colorScheme || 'green-to-red';
+
+            // Set color scheme
+            if (colorScheme === 'multi') {
+                // For multi-color scheme, use a standard threshold scale
+                colorScale = d3.scaleThreshold()
+                    .domain([25, 50, 75])
+                    .range(['#388e3c', '#fbc02d', '#f57c00', '#d32f2f']); // Green, Yellow, Orange, Red
+            } else if (colorScheme === 'green-to-red') {
+                // Create a custom green to red color scale
+                colorScale = d3.scaleSequential()
+                    .interpolator(d3.interpolateRgbBasis(['#388e3c', '#fbc02d', '#f57c00', '#d32f2f'])); // Green, Yellow, Orange, Red
+            } else {
+                // Sequential color schemes
+                colorScale = d3.scaleSequential();
+
+                switch (colorScheme) {
+                    case 'blues':
+                        colorScale.interpolator(d3.interpolateBlues);
+                        break;
+                    case 'greens':
+                        colorScale.interpolator(d3.interpolateGreens);
+                        break;
+                    case 'reds':
+                        colorScale.interpolator(d3.interpolateReds);
+                        break;
+                    case 'purples':
+                        colorScale.interpolator(d3.interpolatePurples);
+                        break;
+                    case 'oranges':
+                        colorScale.interpolator(d3.interpolateOranges);
+                        break;
+                    case 'viridis':
+                        colorScale.interpolator(d3.interpolateViridis);
+                        break;
+                    default:
+                        colorScale.interpolator(d3.interpolateBlues);
+                }
+            }
+
+            // Find min and max values
+            let minValue = 0;
+            let maxValue = 100;
+
+            if (mapData.stateData && mapData.stateData.length > 0) {
+                minValue = d3.min(mapData.stateData, d => d.value) || 0;
+                maxValue = d3.max(mapData.stateData, d => d.value) || 100;
+            }
+
+            // Set domain for color scale
+            colorScale.domain([minValue, maxValue]);
+
+            // Create tooltip
+            const tooltip = d3.select('#tooltip');
+
+            // Define small states that need special handling
+            const smallStates = ['RI', 'DE', 'DC', 'CT', 'NJ', 'MD', 'MA', 'NH', 'VT'];
+
+            // Draw states
+            svg.selectAll('path')
+                .data(statesFeatures)
+                .enter()
+                .append('path')
+                .attr('d', d => pathGenerator(d) || '')
+                .attr('fill', d => {
+                    const stateCode = d.properties.code;
+                    const stateDataItem = mapData.stateData.find(item => item.stateCode === stateCode);
+
+                    // If we're using multi-color scheme and have a custom color for this state, use it
+                    if (colorScheme === 'multi' && mapData.customColors && mapData.customColors[stateCode]) {
+                        return mapData.customColors[stateCode];
+                    }
+
+                    // Special case for Hawaii to ensure it's colored
+                    if (stateCode === 'HI') {
+                        // Force Hawaii to be colored with a specific color from the scale
+                        return colorScale(minValue);
+                    }
+
+                    // For other states, if we have data but value is null, use a light gray
+                    if (stateDataItem) {
+                        return stateDataItem.value !== null ? colorScale(stateDataItem.value) : '#ccc';
+                    }
+
+                    // No data for this state
+                    return '#eee';
+                })
+                .attr('stroke', '#fff')
+                .attr('stroke-width', 0.5)
+                .attr('class', d => {
+                    // Add a class for small states for easier selection
+                    return smallStates.includes(d.properties.code) ? 'small-state' : '';
+                })
+                .on('mouseover', (event, d) => {
+                    const stateCode = d.properties.code;
+                    const stateName = d.properties.name;
+                    const stateDataItem = mapData.stateData.find(item => item.stateCode === stateCode);
+
+                    d3.select(event.currentTarget)
+                        .attr('stroke', '#333')
+                        .attr('stroke-width', 1.5);
+
+                    tooltip
+                        .style('opacity', 1)
+                        .style('left', `${event.pageX + 10}px`)
+                        .style('top', `${event.pageY + 10}px`);
+
+                    // Determine color for tooltip header based on value
+                    let headerColor = '#999';
+                    if (stateDataItem) {
+                        const value = stateDataItem.value;
+                        const normalizedValue = (value - minValue) / (maxValue - minValue);
+
+                        if (normalizedValue >= 0.75) {
+                            headerColor = '#d32f2f'; // Red for highest values
+                        } else if (normalizedValue >= 0.5) {
+                            headerColor = '#f57c00'; // Orange for high values
+                        } else if (normalizedValue >= 0.25) {
+                            headerColor = '#fbc02d'; // Yellow for medium values
+                        } else {
+                            headerColor = '#388e3c'; // Green for low values
+                        }
+                    }
+
+                    // Create tooltip content with header and body
+                    // Use the label as the header if available, otherwise use the state name
+                    const headerText = stateDataItem && stateDataItem.label ? stateDataItem.label : stateName.toUpperCase();
+
+                    let tooltipContent = `
+                        <div class="tooltip-header" style="background-color: ${headerColor}">
+                            <div class="state-icon">${stateDataItem ? stateDataItem.stateCode : ''}</div>
+                            ${headerText}
+                        </div>
+                        <div class="tooltip-body">`;
+
+                    if (stateDataItem) {
+                        // If we're using a label as the header, show the state name in the body
+                        if (stateDataItem.label) {
+                            tooltipContent += `<p><strong>State:</strong> ${stateName}</p>`;
+                        }
+
+                        // Add info if available, preserving HTML formatting
+                        if (stateDataItem.info) {
+                            tooltipContent += `<p>${stateDataItem.info}</p>`;
+                        }
+                    } else {
+                        tooltipContent += '<p>No data available</p>';
+                    }
+
+                    tooltipContent += '</div>';
+
+                    tooltip.html(tooltipContent);
+                })
+                .on('mousemove', (event) => {
+                    tooltip
+                        .style('left', `${event.pageX + 10}px`)
+                        .style('top', `${event.pageY + 10}px`);
+                })
+                .on('mouseout', (event) => {
+                    d3.select(event.currentTarget)
+                        .attr('stroke', '#fff')
+                        .attr('stroke-width', 0.5);
+
+                    tooltip.style('opacity', 0);
+                });
+
+            // Add state labels if enabled
+            if (mapData.showLabels) {
+                svg.selectAll('text')
+                    .data(statesFeatures)
+                    .enter()
+                    .append('text')
+                    .attr('x', d => {
+                        const centroid = pathGenerator.centroid(d);
+                        return centroid[0];
+                    })
+                    .attr('y', d => {
+                        const centroid = pathGenerator.centroid(d);
+                        return centroid[1];
+                    })
+                    .attr('text-anchor', 'middle')
+                    .attr('alignment-baseline', 'middle')
+                    .attr('font-size', '8px')
+                    .attr('fill', '#333')
+                    .text(d => d.properties.code);
+            }
+
+            // Add small states list to the side
+            if (smallStates.length > 0) {
+                // Create a group for the small states list
+                // Position it at the far right edge of the SVG and centered vertically
+                const smallStatesGroup = svg.append('g')
+                    .attr('class', 'small-states-list')
+                    .attr('transform', `translate(${width - 30}, ${height/2 - smallStates.length * 10})`);
+
+                // Add each small state to the list
+                smallStates.forEach((stateCode, index) => {
+                    const state = statesFeatures.find(d => d.properties.code === stateCode);
+                    if (!state) return;
+
+                    const stateCentroid = pathGenerator.centroid(state);
+
+                    // Add small dot for the state
+                    smallStatesGroup.append('circle')
+                        .attr('cx', 0)
+                        .attr('cy', index * 20)
+                        .attr('r', 3)
+                        .attr('fill', '#666');
+
+                    // Add state code text
+                    smallStatesGroup.append('text')
+                        .attr('x', 10)
+                        .attr('y', index * 20 + 4)
+                        .attr('font-size', '10px')
+                        .attr('fill', '#333')
+                        .attr('text-anchor', 'start')
+                        .attr('alignment-baseline', 'middle')
+                        .text(stateCode);
+
+                    // Draw connecting line from list to state - curved line like in the example
+                    if (stateCentroid && stateCentroid.length === 2) {
+                        // Calculate the position relative to the smallStatesGroup
+                        const targetX = stateCentroid[0] - (width - 30);
+                        const targetY = stateCentroid[1] - (height/2 - smallStates.length * 10);
+
+                        // Create a curved path using SVG path commands
+                        const path = `M 0 ${index * 20} L -10 ${index * 20} Q -30 ${index * 20} ${targetX} ${targetY}`;
+
+                        smallStatesGroup.append('path')
+                            .attr('d', path)
+                            .attr('fill', 'none')
+                            .attr('stroke', '#ccc')
+                            .attr('stroke-width', 0.5);
+                    }
+                });
+            }
+
+            // Add legend if we have data
+            if (mapData.stateData && mapData.stateData.length > 0) {
+                const legendWidth = 200;
+                const legendHeight = 20;
+                // Position the legend to the right side of the map, between Texas and Florida
+                const legendX = width * 0.58;
+                const legendY = height - 40;
+
+                // Create gradient for legend
+                const defs = svg.append('defs');
+                const gradient = defs.append('linearGradient')
+                    .attr('id', 'legend-gradient')
+                    .attr('x1', '0%')
+                    .attr('x2', '100%')
+                    .attr('y1', '0%')
+                    .attr('y2', '0%');
+
+                // Add color stops
+                const numStops = 10;
+                for (let i = 0; i <= numStops; i++) {
+                    const offset = `${i * 100 / numStops}%`;
+                    const value = minValue + (i / numStops) * (maxValue - minValue);
+                    gradient.append('stop')
+                        .attr('offset', offset)
+                        .attr('stop-color', colorScale(value));
+                }
+
+                // Draw legend rectangle
+                svg.append('rect')
+                    .attr('x', legendX)
+                    .attr('y', legendY)
+                    .attr('width', legendWidth)
+                    .attr('height', legendHeight)
+                    .style('fill', 'url(#legend-gradient)')
+                    .attr('stroke', '#ccc')
+                    .attr('stroke-width', 1);
+
+                // Add legend title
+                svg.append('text')
+                    .attr('x', legendX)
+                    .attr('y', legendY - 5)
+                    .attr('font-size', '12px')
+                    .attr('fill', '#333')
+                    .text(mapData.legendTitle || 'Value');
+
+                // Add min label directly below the scale
+                svg.append('text')
+                    .attr('x', legendX)
+                    .attr('y', legendY + legendHeight + 15)
+                    .attr('font-size', '12px')
+                    .attr('fill', '#000')
+                    .attr('font-weight', 'bold')
+                    .text(mapData.legendMinLabel || 'Low');
+
+                // Add max label directly below the scale
+                svg.append('text')
+                    .attr('x', legendX + legendWidth)
+                    .attr('y', legendY + legendHeight + 15)
+                    .attr('font-size', '12px')
+                    .attr('fill', '#000')
+                    .attr('text-anchor', 'end')
+                    .attr('font-weight', 'bold')
+                    .text(mapData.legendMaxLabel || 'High');
+            }
+        }
+    </script>
+</body>
+</html>
