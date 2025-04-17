@@ -563,7 +563,7 @@ function setupEventListeners() {
     document.getElementById('copy-code').addEventListener('click', () => {
         const embedCode = document.getElementById('embed-code');
         embedCode.select();
-        
+
         // Use modern clipboard API with fallback
         if (navigator.clipboard && window.isSecureContext) {
             navigator.clipboard.writeText(embedCode.value)
@@ -588,7 +588,7 @@ function setupEventListeners() {
 function showCopySuccess() {
     const copyMessage = document.getElementById('copy-message');
     copyMessage.innerHTML = '<div class="success-message">✓ Copied to clipboard!</div>';
-    
+
     setTimeout(() => {
         copyMessage.innerHTML = '';
     }, 3000);
@@ -852,9 +852,45 @@ function updateEmbedCode() {
         return;
     }
 
-    // Create the embed code with the map ID
+    // Create a JSON data object with all map settings
+    const mapData = {
+        stateData,
+        colorScheme,
+        title: mapTitle,
+        legendTitle,
+        legendMinLabel,
+        legendMaxLabel,
+        showLabels,
+        customColors,
+        id: mapId,
+        timestamp: Date.now()
+    };
+
+    // Convert to JSON string
+    const jsonString = JSON.stringify(mapData);
+
+    // Create a blob and get URL
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const jsonUrl = URL.createObjectURL(blob);
+
+    // Store the URL for download
+    window.mapJsonUrl = jsonUrl;
+
+    // Show download link for the JSON file
+    const saveLoadMessage = document.getElementById('save-load-message');
+    saveLoadMessage.innerHTML = `
+        <div class="info-message">
+            <p>To embed this map on Shopify or other websites:</p>
+            <p>1. <a href="${jsonUrl}" download="map_data_${mapId}.json">Download this JSON file</a></p>
+            <p>2. Upload it to your Shopify Files section</p>
+            <p>3. Copy the URL to the uploaded file</p>
+            <p>4. Replace YOUR_JSON_URL in the embed code with that URL</p>
+        </div>
+    `;
+
+    // Create the embed code with data URL parameter
     const baseUrl = window.location.origin;
-    const embedUrl = `${baseUrl}/embed.html?id=${mapId}`;
+    const embedUrl = `${baseUrl}/embed.html?data=YOUR_JSON_URL`;
 
     const code = `<!-- US Map Generator Embed Code -->
 <iframe

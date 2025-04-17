@@ -81,9 +81,10 @@
     </div>
 
     <script>
-        // Get map ID from URL
+        // Get parameters from URL
         const urlParams = new URLSearchParams(window.location.search);
         const mapId = urlParams.get('id');
+        const dataUrl = urlParams.get('data');
 
         // Default map data
         let mapData = {
@@ -97,24 +98,59 @@
             customColors: {}
         };
 
-        // Try to load map data from localStorage
-        if (mapId) {
-            const savedData = localStorage.getItem(`map_${mapId}`);
-            if (savedData) {
-                try {
-                    mapData = JSON.parse(savedData);
+        // Function to load data from a URL
+        async function loadDataFromUrl(url) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error loading data from URL:', error);
+                return null;
+            }
+        }
+
+        // Initialize map after loading data
+        async function initializeWithData() {
+            // First try to load from data URL if provided
+            if (dataUrl) {
+                const loadedData = await loadDataFromUrl(dataUrl);
+                if (loadedData) {
+                    mapData = loadedData;
                     // Update title
                     document.getElementById('map-title').textContent = mapData.title || 'US Map';
                     document.title = mapData.title || 'US Map';
-                } catch (error) {
-                    console.error('Error loading map data:', error);
+                    // Initialize map
+                    initMap();
+                    return;
                 }
             }
+
+            // If no data URL or loading failed, try localStorage
+            if (mapId) {
+                const savedData = localStorage.getItem(`map_${mapId}`);
+                if (savedData) {
+                    try {
+                        mapData = JSON.parse(savedData);
+                        // Update title
+                        document.getElementById('map-title').textContent = mapData.title || 'US Map';
+                        document.title = mapData.title || 'US Map';
+                    } catch (error) {
+                        console.error('Error loading map data from localStorage:', error);
+                    }
+                }
+            }
+
+            // Initialize map with whatever data we have
+            initMap();
         }
 
         // Initialize map
         document.addEventListener('DOMContentLoaded', () => {
-            initMap();
+            initializeWithData();
         });
 
         // Initialize map
