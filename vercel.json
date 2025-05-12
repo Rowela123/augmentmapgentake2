@@ -1,16 +1,39 @@
 {
-  "rewrites": [
-    { "source": "/embed", "destination": "/index.html" },
-    { "source": "/embed/:id", "destination": "/index.html" },
-    { "source": "/test", "destination": "/index.html" }
-  ],
-  "headers": [
+  "version": 2,
+  "builds": [
     {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "Content-Security-Policy", "value": "frame-ancestors *;" },
-        { "key": "Access-Control-Allow-Origin", "value": "*" }
-      ]
+      "src": "package.json",
+      "use": "@vercel/node",
+      "config": {
+        "installCommand": "npm install",
+        "buildCommand": "CI=false npm run build"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
+    },
+    {
+      "src": "/favicon.ico",
+      "dest": "/favicon.ico"
+    },
+    {
+      "src": "/manifest.json",
+      "dest": "/manifest.json"
+    },
+    {
+      "src": "/map-generator.js",
+      "dest": "/take2/map-generator.js"
+    },
+    {
+      "src": "/embed.html",
+      "dest": "/temp-newmapgenerator/embed.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
-} 
+}
