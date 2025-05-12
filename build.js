@@ -61,4 +61,13 @@ try {
   console.error('Error copying map-generator.html:', error);
 }
 
+// Copy direct-map.html to build
+try {
+  const directMapContent = fs.readFileSync('public/direct-map.html', 'utf8');
+  fs.writeFileSync('build/direct-map.html', directMapContent);
+  console.log('Successfully copied direct-map.html to build directory');
+} catch (error) {
+  console.error('Error copying direct-map.html:', error);
+}
+
 console.log('Build process completed successfully');

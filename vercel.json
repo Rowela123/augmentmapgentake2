@@ -40,6 +40,10 @@
       "dest": "/map-generator.html"
     },
     {
+      "src": "/direct-map.html",
+      "dest": "/direct-map.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "/index.html"
     }
