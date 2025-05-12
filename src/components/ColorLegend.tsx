@@ -2,93 +2,108 @@ import React from 'react';
 import styled from 'styled-components';
 
 interface ColorLegendProps {
-  colorScale: (value: number) => string;
-  width: number;
+  colorScale: string[];
   minValue: number;
   maxValue: number;
   title?: string;
   minLabel?: string;
   maxLabel?: string;
+  width?: number;
+  height?: number;
+  customColors?: Record<string, string>; // Add support for custom colors
+  colorScheme?: string; // Add support for color scheme
 }
 
 const LegendContainer = styled.div`
-  margin-top: 10px;
-  font-family: Arial, sans-serif;
+  margin-top: 20px;
+  padding: 10px;
 `;
 
 const LegendTitle = styled.div`
   font-size: 14px;
-  font-weight: bold;
   margin-bottom: 5px;
   text-align: center;
+  color: #333;
 `;
 
-const GradientBar = styled.div<{ width: number }>`
-  height: 10px;
+const GradientBar = styled.div<{ width: number, height: number }>`
   width: ${props => props.width}px;
+  height: ${props => props.height}px;
+  margin: 0 auto;
   position: relative;
-  border-radius: 2px;
-  overflow: hidden;
+  background: linear-gradient(to right, ${props => props.color});
+  border-radius: 4px;
 `;
 
 const LabelsContainer = styled.div<{ width: number }>`
   display: flex;
   justify-content: space-between;
   width: ${props => props.width}px;
-  margin-top: 5px;
+  margin: 5px auto 0;
+`;
+
+const Label = styled.div`
   font-size: 12px;
   color: #666;
 `;
 
-/**
- * A simple color scale bar that shows the gradient from min to max values
- */
 const ColorLegend: React.FC<ColorLegendProps> = ({
   colorScale,
-  width,
   minValue,
   maxValue,
   title,
   minLabel = 'Low',
-  maxLabel = 'High'
+  maxLabel = 'High',
+  width = 200,
+  height = 15,
+  customColors = {},
+  colorScheme = 'default'
 }) => {
-  // Create color segments for the gradient
-  const segments = 20;
-  const step = (maxValue - minValue) / segments;
-  
-  // Format numbers with commas
-  const formatNumber = (num: number) => {
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  // Check if we're using multi-color scheme AND have custom colors
+  const useCustomColors = colorScheme === 'multi' && Object.keys(customColors).length > 0;
+
+  // Convert colorScale array to a CSS gradient string
+  let gradientColors;
+
+  if (useCustomColors) {
+    // Extract all unique colors from the customColors object
+    const uniqueColors = [...new Set(Object.values(customColors))];
+
+    // Create gradient stops using these unique custom colors
+    gradientColors = uniqueColors.map((color, index) => {
+      const percentage = (index / (uniqueColors.length - 1 || 1)) * 100;
+      return `${color} ${percentage}%`;
+    }).join(', ');
+  } else {
+    // Use the standard color scale for the gradient
+    gradientColors = colorScale.map((color, index) => {
+      const percentage = (index / (colorScale.length - 1)) * 100;
+      return `${color} ${percentage}%`;
+    }).join(', ');
+  }
+
+  // Format values for display
+  const formatValue = (value: number): string => {
+    if (value >= 1000) {
+      return (value / 1000).toFixed(1) + 'k';
+    }
+    return value.toLocaleString();
   };
-  
+
   return (
     <LegendContainer>
       {title && <LegendTitle>{title}</LegendTitle>}
-      
-      <GradientBar width={width}>
-        {Array.from({ length: segments }).map((_, i) => {
-          const value = minValue + (step * i);
-          return (
-            <div
-              key={i}
-              style={{
-                position: 'absolute',
-                left: `${(i / segments) * 100}%`,
-                width: `${100 / segments}%`,
-                height: '100%',
-                backgroundColor: colorScale(value)
-              }}
-            />
-          );
-        })}
-      </GradientBar>
-      
+      <GradientBar
+        width={width}
+        height={height}
+        color={gradientColors}
+      />
       <LabelsContainer width={width}>
-        <span>{minLabel}{minValue ? ` ($${formatNumber(minValue)})` : ''}</span>
-        <span>{maxLabel}{maxValue ? ` ($${formatNumber(maxValue)})` : ''}</span>
+        <Label>{minLabel || formatValue(minValue)}</Label>
+        <Label>{maxLabel || formatValue(maxValue)}</Label>
       </LabelsContainer>
     </LegendContainer>
   );
 };
 
-export default ColorLegend; 
+export default ColorLegend;
