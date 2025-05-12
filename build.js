@@ -45,11 +45,19 @@ try {
 
 // Copy index.html to build
 try {
-  const indexContent = fs.readFileSync('public/index.html', 'utf8');
+  // Try to use the redirect version first
+  const indexContent = fs.readFileSync('public/index-redirect.html', 'utf8');
   fs.writeFileSync('build/index.html', indexContent);
-  console.log('Successfully copied index.html to build directory');
+  console.log('Successfully copied index-redirect.html to build/index.html');
 } catch (error) {
-  console.error('Error copying index.html:', error);
+  try {
+    // Fall back to the original index.html
+    const indexContent = fs.readFileSync('public/index.html', 'utf8');
+    fs.writeFileSync('build/index.html', indexContent);
+    console.log('Successfully copied index.html to build directory');
+  } catch (fallbackError) {
+    console.error('Error copying index.html:', fallbackError);
+  }
 }
 
 // Copy map-generator.html from take2 to build
@@ -68,6 +76,15 @@ try {
   console.log('Successfully copied direct-map.html to build directory');
 } catch (error) {
   console.error('Error copying direct-map.html:', error);
+}
+
+// Copy standalone-map.html to build
+try {
+  const standaloneMapContent = fs.readFileSync('public/standalone-map.html', 'utf8');
+  fs.writeFileSync('build/standalone-map.html', standaloneMapContent);
+  console.log('Successfully copied standalone-map.html to build directory');
+} catch (error) {
+  console.error('Error copying standalone-map.html:', error);
 }
 
 console.log('Build process completed successfully');
