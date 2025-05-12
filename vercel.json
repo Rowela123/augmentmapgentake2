@@ -16,6 +16,10 @@
       "dest": "/static/$1"
     },
     {
+      "src": "/js/(.*)",
+      "dest": "/js/$1"
+    },
+    {
       "src": "/favicon.ico",
       "dest": "/favicon.ico"
     },
@@ -25,11 +29,15 @@
     },
     {
       "src": "/map-generator.js",
-      "dest": "/take2/map-generator.js"
+      "dest": "/map-generator.js"
     },
     {
       "src": "/embed.html",
-      "dest": "/temp-newmapgenerator/embed.html"
+      "dest": "/embed.html"
+    },
+    {
+      "src": "/map-generator.html",
+      "dest": "/map-generator.html"
     },
     {
       "src": "/(.*)",

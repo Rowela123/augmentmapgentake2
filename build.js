@@ -11,6 +11,20 @@ if (!fs.existsSync('build/static')) {
   fs.mkdirSync('build/static');
 }
 
+// Create directory for JS files
+if (!fs.existsSync('build/js')) {
+  fs.mkdirSync('build/js');
+}
+
+// Copy map-generator.js to js directory as well
+try {
+  const mapGeneratorContent = fs.readFileSync('public/js/map-generator.js', 'utf8');
+  fs.writeFileSync('build/js/map-generator.js', mapGeneratorContent);
+  console.log('Successfully copied map-generator.js to build/js directory');
+} catch (error) {
+  console.error('Error copying map-generator.js to js directory:', error);
+}
+
 // Copy map-generator.js from take2 to build
 try {
   const mapGeneratorContent = fs.readFileSync('take2/map-generator.js', 'utf8');
@@ -36,6 +50,15 @@ try {
   console.log('Successfully copied index.html to build directory');
 } catch (error) {
   console.error('Error copying index.html:', error);
+}
+
+// Copy map-generator.html from take2 to build
+try {
+  const mapGeneratorHtmlContent = fs.readFileSync('take2/map-generator.html', 'utf8');
+  fs.writeFileSync('build/map-generator.html', mapGeneratorHtmlContent);
+  console.log('Successfully copied map-generator.html to build directory');
+} catch (error) {
+  console.error('Error copying map-generator.html:', error);
 }
 
 console.log('Build process completed successfully');
