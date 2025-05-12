@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import * as topojson from 'topojson-client';
 import { StateData, MapProps } from '../types';
-import { generateColorScale, COLOR_SCHEMES } from '../utils/colorUtils';
+import { generateColorScale, getColorScheme } from '../utils/colorUtils';
 import ColorLegend from './ColorLegend';
 import styled from 'styled-components';
 
@@ -515,7 +515,7 @@ const USMap: React.FC<USMapProps> = ({
 
       {/* Add ColorLegend component */}
       <ColorLegend
-        colorScale={selectedColorScheme === 'blues' ? COLOR_SCHEMES.blues : COLOR_SCHEMES.default}
+        colorScale={getColorScheme(selectedColorScheme)}
         minValue={d3.min(data, d => d.value) || 0}
         maxValue={d3.max(data, d => d.value) || 100}
         title={scaleTitle}
