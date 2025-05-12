@@ -2,53 +2,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "build"
-      }
+      "src": "minimal-map.html",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
-      "src": "/static/(.*)",
-      "dest": "/static/$1"
-    },
-    {
-      "src": "/js/(.*)",
-      "dest": "/js/$1"
-    },
-    {
-      "src": "/favicon.ico",
-      "dest": "/favicon.ico"
-    },
-    {
-      "src": "/manifest.json",
-      "dest": "/manifest.json"
-    },
-    {
-      "src": "/map-generator.js",
-      "dest": "/map-generator.js"
-    },
-    {
-      "src": "/embed.html",
-      "dest": "/embed.html"
-    },
-    {
-      "src": "/map-generator.html",
-      "dest": "/map-generator.html"
-    },
-    {
-      "src": "/direct-map.html",
-      "dest": "/direct-map.html"
-    },
-    {
-      "src": "/standalone-map.html",
-      "dest": "/standalone-map.html"
-    },
-    {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "/minimal-map.html"
     }
   ]
 }
