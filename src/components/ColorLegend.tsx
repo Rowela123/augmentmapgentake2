@@ -66,8 +66,18 @@ const ColorLegend: React.FC<ColorLegendProps> = ({
   let gradientColors;
 
   if (useCustomColors) {
-    // Extract all unique colors from the customColors object
-    const uniqueColors = [...new Set(Object.values(customColors))];
+    // Extract unique colors without using Set spread
+    const colorValues = Object.values(customColors);
+    const uniqueColorsMap: Record<string, boolean> = {};
+    const uniqueColors: string[] = [];
+
+    // Manually create array of unique colors
+    colorValues.forEach(color => {
+      if (!uniqueColorsMap[color]) {
+        uniqueColorsMap[color] = true;
+        uniqueColors.push(color);
+      }
+    });
 
     // Create gradient stops using these unique custom colors
     gradientColors = uniqueColors.map((color, index) => {
