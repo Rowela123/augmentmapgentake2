@@ -7,6 +7,11 @@ export interface StateData {
   fullName?: string;  // Optional full name of the state
   label?: string;     // Optional custom label for the state
   color?: string;     // Optional custom color for the state
+  info?: string;      // Optional information about the state
+  formatting?: Record<string, TextFormatting>; // Formatting options
+  // Additional properties for backward compatibility
+  stateCode?: string; // Same as state, for backward compatibility
+  stateName?: string; // Same as fullName, for backward compatibility
   [key: string]: any; // Allow additional properties
 }
 
@@ -160,4 +165,9 @@ export interface UploadResult {
 // Define a more specific formatting interface for clarity
 export interface TextFormatting {
   bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  color?: string;
+  backgroundColor?: string;
+  [key: string]: any; // Allow additional properties
 }
