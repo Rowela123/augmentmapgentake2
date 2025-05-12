@@ -49,12 +49,12 @@ const UploadSection = styled.div<UploadSectionProps>`
   transition: all 0.3s ease;
   position: relative;
   cursor: pointer;
-  
+
   &:hover {
     border-color: #4a90e2;
     background-color: #f0f8ff;
   }
-  
+
   ${props => props.isDragging && css`
     animation: ${pulseAnimation} 1.5s infinite;
   `}
@@ -79,13 +79,13 @@ const UploadButton = styled.button`
   align-items: center;
   justify-content: center;
   gap: 8px;
-  
+
   &:hover {
     background-color: #357ABD;
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   }
-  
+
   &:active {
     transform: translateY(0);
   }
@@ -142,31 +142,31 @@ const DataTable = styled.table`
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  
+
   th, td {
     padding: 12px 15px;
     text-align: left;
   }
-  
+
   th {
     background-color: #f2f7fd;
     color: #2c3e50;
     font-weight: 600;
     border-bottom: 2px solid #e3e8f0;
   }
-  
+
   td {
     border-bottom: 1px solid #eaeef2;
   }
-  
+
   tr:last-child td {
     border-bottom: none;
   }
-  
+
   tr:nth-child(even) {
     background-color: #f8fafc;
   }
-  
+
   tr:hover {
     background-color: #f0f7ff;
   }
@@ -188,7 +188,7 @@ const SectionTitle = styled.h3`
   display: flex;
   align-items: center;
   gap: 8px;
-  
+
   &::before {
     content: '';
     display: block;
@@ -222,7 +222,7 @@ const DataCount = styled.div`
   align-items: center;
   margin-top: 10px;
   font-weight: 500;
-  
+
   &::before {
     content: '📊';
     margin-right: 6px;
@@ -233,12 +233,12 @@ const UploadInstructions = styled.div`
   max-width: 500px;
   margin: 0 auto;
   text-align: center;
-  
+
   p {
     margin-bottom: 20px;
     color: #5d6d7e;
   }
-  
+
   h4 {
     margin: 0 0 10px;
     color: #2c3e50;
@@ -251,33 +251,33 @@ const DataUploader: React.FC<DataUploaderProps> = ({ onDataUpload }) => {
   const [previewData, setPreviewData] = useState<StateData[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
   }, []);
-  
+
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
   }, []);
-  
+
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       handleFile(e.dataTransfer.files[0]);
     }
   }, []);
-  
+
   const handleFile = (file: File) => {
     setError(null);
     setSuccess(null);
-    
+
     // Check file type
     const fileExt = file.name.split('.').pop()?.toLowerCase() || '';
-    
+
     if (fileExt === 'xlsx' || fileExt === 'xls') {
       readExcelFile(file);
     } else if (fileExt === 'csv') {
@@ -285,41 +285,41 @@ const DataUploader: React.FC<DataUploaderProps> = ({ onDataUpload }) => {
     } else {
       setError('Invalid file type. Please upload an Excel (.xlsx, .xls) or CSV file.');
     }
-    
+
     // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
-  
+
   const handleFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    
+
     handleFile(file);
   };
-  
+
   const readExcelFile = (file: File) => {
     const reader = new FileReader();
-    
+
     reader.onload = (e) => {
       try {
         const data = new Uint8Array(e.target?.result as ArrayBuffer);
-        
+
         // Read the workbook with formatting options enabled
-        const workbook = XLSX.read(data, { 
+        const workbook = XLSX.read(data, {
           type: 'array',
           cellStyles: true,
           cellDates: true,
         });
-        
+
         // Get the first worksheet
         const worksheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[worksheetName];
-        
+
         // Get worksheet range
         const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
-        
+
         // Get headers (first row)
         const headers: Record<number, string> = {};
         for (let C = range.s.c; C <= range.e.c; ++C) {
@@ -328,34 +328,34 @@ const DataUploader: React.FC<DataUploaderProps> = ({ onDataUpload }) => {
             headers[C] = String(cell.v).toLowerCase();
           }
         }
-        
+
         console.log('Excel headers:', headers);
-        
+
         // Get data as JSON
         const rawData = XLSX.utils.sheet_to_json(worksheet);
-        
+
         // Log the cell styling options we detect
-        console.log('Sample cell styling from Excel:', worksheet['A2']?.s); 
-        
+        console.log('Sample cell styling from Excel:', worksheet['A2']?.s);
+
         // Process each row to add formatting info
         const processedData = rawData.map((row: any, idx: number) => {
           // Row in Excel is header + 1 + index
           const rowIdx = range.s.r + 1 + idx;
           const formattedRow = { ...row };
-          
+
           // Create formatting container
           formattedRow._formatting = {};
-          
+
           // Check each column for formatting
           Object.entries(headers).forEach(([colIdxStr, fieldName]) => {
             const colIdx = parseInt(colIdxStr);
             const cellRef = XLSX.utils.encode_cell({r: rowIdx, c: colIdx});
-            
-            if (worksheet[cellRef] && worksheet[cellRef].s && 
+
+            if (worksheet[cellRef] && worksheet[cellRef].s &&
                 worksheet[cellRef].s.font && worksheet[cellRef].s.font.bold) {
               // This cell has bold formatting
               formattedRow._formatting[fieldName] = { bold: true };
-              
+
               // Enhanced logging for formatting detection
               console.log(`Detected bold formatting at row ${rowIdx+1}, column ${colIdx+1} (${fieldName}):`, {
                 cellRef,
@@ -364,10 +364,10 @@ const DataUploader: React.FC<DataUploaderProps> = ({ onDataUpload }) => {
               });
             }
           });
-          
+
           return formattedRow;
         });
-        
+
         console.log('Processed Excel data with formatting:', processedData);
         processData(processedData);
       } catch (err) {
@@ -375,14 +375,14 @@ const DataUploader: React.FC<DataUploaderProps> = ({ onDataUpload }) => {
         setError('Error processing Excel file. Please check the format.');
       }
     };
-    
+
     reader.onerror = () => {
       setError('Error reading file. Please try again.');
     };
-    
+
     reader.readAsArrayBuffer(file);
   };
-  
+
   const readCSVFile = (file: File) => {
     Papa.parse(file, {
       header: true,
@@ -391,7 +391,7 @@ const DataUploader: React.FC<DataUploaderProps> = ({ onDataUpload }) => {
           setError(`CSV parse error: ${results.errors[0].message}`);
           return;
         }
-        
+
         processData(results.data as any[]);
       },
       error: (error) => {
@@ -399,32 +399,32 @@ const DataUploader: React.FC<DataUploaderProps> = ({ onDataUpload }) => {
       }
     });
   };
-  
+
   const processData = (rawData: any[]) => {
     try {
       if (!rawData.length) {
         setError('No data found in the file.');
         return;
       }
-      
+
       console.log('Raw data from file:', rawData);
-      
+
       // Check required fields
       const firstRow = rawData[0];
       if (!('state' in firstRow || 'State' in firstRow || 'STATE' in firstRow || 'stateName' in firstRow || 'StateName' in firstRow)) {
         setError('State name column not found. Please include a column named "state", "State", or "stateName".');
         return;
       }
-      
+
       // Log if we detect any formatting information in the raw data
       const hasFormatting = rawData.some(row => row._formatting || Object.keys(row).some(key => key.endsWith('_formatting')));
       console.log('Detected formatting information in uploaded file:', hasFormatting);
-      
+
       const processedData: StateData[] = rawData.map((row, index) => {
         // Find the state name column (using various possible naming conventions)
         const stateName = row.state || row.State || row.STATE || row.stateName || row.StateName;
         let stateCode = row.stateCode || row.StateCode || row.stateAbbr || row.code || '';
-        
+
         // If we don't have a code but have a name, try to convert
         if (!stateCode && stateName) {
           stateCode = stateNameToCode(stateName);
@@ -432,55 +432,53 @@ const DataUploader: React.FC<DataUploaderProps> = ({ onDataUpload }) => {
             console.warn(`Could not find state code for: "${stateName}"`);
           }
         }
-        
+
         // Get value and ensure it's proper type if possible
         let value = row.value || row.Value || row.amount || row.Amount || null;
         if (value !== null && !isNaN(Number(value))) {
           value = Number(value);
         }
-        
+
         // Get label and info
-        let label = row.label || row.Label || row.description || row.Description || '';
-        let info = row.info || row.Info || row.details || row.Details || '';
-        
+        const label = row.label || row.Label || row.description || row.Description || '';
+        const info = row.info || row.Info || row.details || row.Details || '';
+
         // Check for formatting info
         const formatting: Record<string, any> = {};
-        
+
         // If the row has _formatting property (from Excel), use it directly
         if (row._formatting) {
           console.log(`Row ${index} (_formatting found):`, row._formatting);
-          
+
           // Map Excel field names to our standardized field names
-          const valueField = row.value !== undefined ? 'value' : 
-                            row.Value !== undefined ? 'Value' : 
-                            row.amount !== undefined ? 'amount' : 
+          const valueField = row.value !== undefined ? 'value' :
+                            row.Value !== undefined ? 'Value' :
+                            row.amount !== undefined ? 'amount' :
                             row.Amount !== undefined ? 'Amount' : '';
-                            
-          const labelField = row.label !== undefined ? 'label' : 
-                            row.Label !== undefined ? 'Label' : 
-                            row.description !== undefined ? 'description' : 
+
+          const labelField = row.label !== undefined ? 'label' :
+                            row.Label !== undefined ? 'Label' :
+                            row.description !== undefined ? 'description' :
                             row.Description !== undefined ? 'Description' : '';
-                            
-          const infoField = row.info !== undefined ? 'info' : 
-                           row.Info !== undefined ? 'Info' : 
-                           row.details !== undefined ? 'details' : 
+
+          const infoField = row.info !== undefined ? 'info' :
+                           row.Info !== undefined ? 'Info' :
+                           row.details !== undefined ? 'details' :
                            row.Details !== undefined ? 'Details' : '';
-          
+
           // Check if any of our fields have bold formatting
-          if (valueField && row._formatting[valueField.toLowerCase()]?.bold) {
+          if (valueField && row._formatting[valueField.toLowerCase()]) {
             formatting.value = { bold: true };
             console.log(`Bold formatting detected for value field '${valueField}'`);
           }
-          
-          if (labelField && row._formatting[labelField.toLowerCase()]?.bold) {
+
+          if (labelField && row._formatting[labelField.toLowerCase()]) {
             formatting.label = { bold: true };
-            label = `<strong>${label}</strong>`;
             console.log(`Bold formatting detected for label field '${labelField}'`);
           }
-          
-          if (infoField && row._formatting[infoField.toLowerCase()]?.bold) {
+
+          if (infoField && row._formatting[infoField.toLowerCase()]) {
             formatting.info = { bold: true };
-            info = `<strong>${info}</strong>`;
             console.log(`Bold formatting detected for info field '${infoField}'`);
           }
         } else {
@@ -493,29 +491,32 @@ const DataUploader: React.FC<DataUploaderProps> = ({ onDataUpload }) => {
             }
           });
         }
-        
+
         // Create the StateData object with available fields
         return {
-          stateCode,
-          stateName: stateName || '',
-          value,
+          state: stateCode, // Use stateCode as the state property
+          value: value || 0, // Ensure value is always a number
+          fullName: stateName || '',
           label,
           info,
           color: row.color || row.Color || row.fillColor || row.FillColor || '',
+          // Store additional properties
+          stateCode, // Keep stateCode for backward compatibility
+          stateName: stateName || '',
           // Store formatting info in the data
           formatting: Object.keys(formatting).length > 0 ? formatting : undefined
         };
-      }).filter(item => item.stateCode); // Only include items with a valid state code
-      
+      }).filter(item => item.state); // Only include items with a valid state code
+
       if (processedData.length === 0) {
         setError('No valid state data found in the file. Make sure your file has state names or codes.');
         return;
       }
-      
+
       console.log('Processed data with formatting:', processedData);
       setPreviewData(processedData.slice(0, 10)); // Preview first 10 rows
       setSuccess(`File uploaded successfully! Loaded data for ${processedData.length} states.`);
-      
+
       // Call the onDataUpload callback with the processed data
       onDataUpload(processedData);
     } catch (err) {
@@ -523,17 +524,17 @@ const DataUploader: React.FC<DataUploaderProps> = ({ onDataUpload }) => {
       setError(`Error processing data: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   };
-  
+
   const handleButtonClick = () => {
     // Trigger file input click
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
   };
-  
+
   const downloadSampleFile = () => {
     console.log('Generating sample file with bold formatting...');
-    
+
     // Create sample data with formatting
     const sampleData = [
       { state: 'California', value: 1250000, label: 'Online Tutoring', info: 'Highest Earning Side Hustle' },
@@ -542,34 +543,34 @@ const DataUploader: React.FC<DataUploaderProps> = ({ onDataUpload }) => {
       { state: 'Florida', value: 850000, label: 'Part-time Home Rental', info: 'Growing Fast' },
       { state: 'Illinois', value: 720000, label: 'Babysitting', info: 'Traditional Side Hustle' },
     ];
-    
+
     // Create workbook and worksheet
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(sampleData);
-    
+
     // Get the cell references
     const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:E6');
-    
+
     // Create a bold style
     const boldStyle = { font: { bold: true } };
     console.log('Using bold style object:', boldStyle);
-    
+
     // Apply bold to header row
     for (let C = range.s.c; C <= range.e.c; ++C) {
       const headerCell = XLSX.utils.encode_cell({r: 0, c: C});
       if (!ws[headerCell]) continue;
-      
+
       // Create or update the style
       ws[headerCell].s = boldStyle;
       console.log(`Applied bold to header cell ${headerCell}`);
     }
-    
+
     // Apply bold to specific values to demonstrate formatting:
-    
+
     // 1. New York's VALUE (bold the amount)
     // Find the cell for New York's value (row 3, value column - usually B or C)
     let valueColIndex = -1;
-    
+
     // First, find the column index for the value field
     for (let C = range.s.c; C <= range.e.c; ++C) {
       const headerCell = XLSX.utils.encode_cell({r: 0, c: C});
@@ -578,7 +579,7 @@ const DataUploader: React.FC<DataUploaderProps> = ({ onDataUpload }) => {
         break;
       }
     }
-    
+
     if (valueColIndex >= 0) {
       // Apply bold to New York's value (row 3 because of 0-indexing + 1 for header row)
       const nyValueCell = XLSX.utils.encode_cell({r: 3, c: valueColIndex});
@@ -587,10 +588,10 @@ const DataUploader: React.FC<DataUploaderProps> = ({ onDataUpload }) => {
         console.log(`Applied bold to New York's value cell ${nyValueCell}: ${ws[nyValueCell].v}`);
       }
     }
-    
+
     // 2. Apply bold to the "Most Popular Side Hustle" in label column for Texas
     let labelColIndex = -1;
-    
+
     // Find the label column
     for (let C = range.s.c; C <= range.e.c; ++C) {
       const headerCell = XLSX.utils.encode_cell({r: 0, c: C});
@@ -599,7 +600,7 @@ const DataUploader: React.FC<DataUploaderProps> = ({ onDataUpload }) => {
         break;
       }
     }
-    
+
     if (labelColIndex >= 0) {
       // Apply bold to Texas's label (row 2)
       const txLabelCell = XLSX.utils.encode_cell({r: 2, c: labelColIndex});
@@ -608,10 +609,10 @@ const DataUploader: React.FC<DataUploaderProps> = ({ onDataUpload }) => {
         console.log(`Applied bold to Texas's label cell ${txLabelCell}: ${ws[txLabelCell].v}`);
       }
     }
-    
+
     // 3. Apply bold to California's info ("Highest Earning Side Hustle")
     let infoColIndex = -1;
-    
+
     // Find the info column
     for (let C = range.s.c; C <= range.e.c; ++C) {
       const headerCell = XLSX.utils.encode_cell({r: 0, c: C});
@@ -620,7 +621,7 @@ const DataUploader: React.FC<DataUploaderProps> = ({ onDataUpload }) => {
         break;
       }
     }
-    
+
     if (infoColIndex >= 0) {
       // Apply bold to California's info (row 1)
       const caInfoCell = XLSX.utils.encode_cell({r: 1, c: infoColIndex});
@@ -629,9 +630,9 @@ const DataUploader: React.FC<DataUploaderProps> = ({ onDataUpload }) => {
         console.log(`Applied bold to California's info cell ${caInfoCell}: ${ws[caInfoCell].v}`);
       }
     }
-    
+
     XLSX.utils.book_append_sheet(wb, ws, 'Sample Data');
-    
+
     // Verify styling before writing file
     console.log('Sample worksheet with styling:', {
       A2_style: ws['A2']?.s,
@@ -639,15 +640,15 @@ const DataUploader: React.FC<DataUploaderProps> = ({ onDataUpload }) => {
       C2_style: ws['C2']?.s,
       D2_style: ws['D2']?.s,
     });
-    
+
     // Generate download with a descriptive filename
     XLSX.writeFile(wb, 'map_data_sample_with_formatting.xlsx');
-    
+
     // Notify the user
     setSuccess('Sample Excel file with formatting has been downloaded. You can use this as a template for your data.');
     console.log('Sample file with formatting has been generated and downloaded');
   };
-  
+
   return (
     <UploaderContainer>
       <h2>Upload Your Data</h2>
@@ -655,21 +656,21 @@ const DataUploader: React.FC<DataUploaderProps> = ({ onDataUpload }) => {
         Upload an Excel (.xlsx, .xls) or CSV file with your state data to create your customized U.S. map.
         Your file should include columns for state names or codes and any values you want to display.
       </p>
-      
-      <UploadSection 
+
+      <UploadSection
         isDragging={isDragging}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={handleButtonClick}
       >
-        <FileInput 
-          type="file" 
-          ref={fileInputRef} 
-          onChange={handleFileUpload} 
-          accept=".xlsx,.xls,.csv" 
+        <FileInput
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileUpload}
+          accept=".xlsx,.xls,.csv"
         />
-        
+
         <UploadInstructions>
           <h4>{isDragging ? 'Drop your file here!' : 'Upload your data file'}</h4>
           <p>Drag and drop your Excel or CSV file here, or click to browse</p>
@@ -678,21 +679,21 @@ const DataUploader: React.FC<DataUploaderProps> = ({ onDataUpload }) => {
           </UploadButton>
         </UploadInstructions>
       </UploadSection>
-      
+
       {error && (
         <ErrorMessage>
           <IconContainer>⚠️</IconContainer>
           <MessageContent>{error}</MessageContent>
         </ErrorMessage>
       )}
-      
+
       {success && (
         <SuccessMessage>
           <IconContainer>✅</IconContainer>
           <MessageContent>{success}</MessageContent>
         </SuccessMessage>
       )}
-      
+
       {previewData.length > 0 && (
         <PreviewContainer>
           <SectionTitle>Data Preview</SectionTitle>
@@ -710,31 +711,31 @@ const DataUploader: React.FC<DataUploaderProps> = ({ onDataUpload }) => {
             <tbody>
               {previewData.map((item, index) => (
                 <tr key={index}>
-                  <td>{item.stateName}</td>
-                  <td>{item.stateCode}</td>
-                  <td style={{ 
-                    fontWeight: item.formatting && 
-                                item.formatting.value && 
-                                item.formatting.value.bold ? 'bold' : 'normal' 
+                  <td>{item.fullName || item.stateName}</td>
+                  <td>{item.state}</td>
+                  <td style={{
+                    fontWeight: item.formatting &&
+                                item.formatting.value &&
+                                item.formatting.value.bold ? 'bold' : 'normal'
                   } as React.CSSProperties}>
                     {item.value}
                   </td>
-                  <td style={{ 
-                    fontWeight: item.formatting && 
-                                item.formatting.label && 
-                                item.formatting.label.bold ? 'bold' : 'normal' 
+                  <td style={{
+                    fontWeight: item.formatting &&
+                                item.formatting.label &&
+                                item.formatting.label.bold ? 'bold' : 'normal'
                   } as React.CSSProperties}>
                     {item.label}
                   </td>
-                  <td style={{ 
-                    fontWeight: item.formatting && 
-                                item.formatting.info && 
-                                item.formatting.info.bold ? 'bold' : 'normal' 
+                  <td style={{
+                    fontWeight: item.formatting &&
+                                item.formatting.info &&
+                                item.formatting.info.bold ? 'bold' : 'normal'
                   } as React.CSSProperties}>
                     {item.info}
                   </td>
                   <td>
-                    {item.formatting ? 
+                    {item.formatting ?
                       Object.entries(item.formatting)
                         .filter(([_, format]) => format && format.bold)
                         .map(([field]) => field)
@@ -751,11 +752,11 @@ const DataUploader: React.FC<DataUploaderProps> = ({ onDataUpload }) => {
           </DataCount>
         </PreviewContainer>
       )}
-      
+
       <SampleSection>
         <SectionTitle>Need a Sample File?</SectionTitle>
         <p>
-          Not sure how to format your data? Download our sample Excel file with formatting 
+          Not sure how to format your data? Download our sample Excel file with formatting
           that shows how to highlight specific values.
         </p>
         <UploadButton onClick={downloadSampleFile}>
@@ -766,4 +767,4 @@ const DataUploader: React.FC<DataUploaderProps> = ({ onDataUpload }) => {
   );
 };
 
-export default DataUploader; 
+export default DataUploader;
