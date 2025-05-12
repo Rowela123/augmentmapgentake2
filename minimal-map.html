@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimal US Map</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            height: 100%;
+            width: 100%;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .map-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            overflow: hidden;
+            min-height: 500px;
+        }
+        #map-title {
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-bottom: 1px solid #ccc;
+            font-weight: bold;
+        }
+        #map {
+            flex: 1;
+            background-color: #fff;
+            position: relative;
+        }
+        .tooltip {
+            position: absolute;
+            background: white;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Minimal US Map</h1>
+        </div>
+        
+        <div class="map-container">
+            <div id="map-title">US Map</div>
+            <div id="map"></div>
+        </div>
+        
+        <div id="tooltip" class="tooltip"></div>
+    </div>
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://d3js.org/topojson.v3.min.js"></script>
+    
+    <script>
+        // Sample data
+        const stateData = [
+            { stateCode: 'NY', stateName: 'New York', value: 75, color: '#d32f2f' },
+            { stateCode: 'CA', stateName: 'California', value: 50, color: '#f57c00' },
+            { stateCode: 'TX', stateName: 'Texas', value: 25, color: '#388e3c' }
+        ];
+        
+        // Create a map of state data for quick lookup
+        const stateDataMap = {};
+        stateData.forEach(state => {
+            stateDataMap[state.stateCode] = state;
+        });
+        
+        // Initialize the map
+        document.addEventListener('DOMContentLoaded', () => {
+            // Load US map data
+            d3.json('https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json')
+                .then(us => {
+                    drawMap(us);
+                })
+                .catch(error => {
+                    console.error('Error loading US map data:', error);
+                });
+        });
+        
+        // Draw the map
+        function drawMap(us) {
+            const svg = d3.select('#map');
+            const width = svg.node().clientWidth;
+            const height = svg.node().clientHeight;
+            
+            // Clear previous content
+            svg.selectAll('*').remove();
+            
+            // Create projection
+            const projection = d3.geoAlbersUsa()
+                .fitSize([width, height], topojson.feature(us, us.objects.states));
+            
+            // Create path generator
+            const path = d3.geoPath().projection(projection);
+            
+            // Create tooltip
+            const tooltip = d3.select('#tooltip');
+            
+            // Draw states
+            svg.selectAll('path')
+                .data(topojson.feature(us, us.objects.states).features)
+                .enter()
+                .append('path')
+                .attr('d', path)
+                .attr('fill', d => {
+                    // Get state code
+                    const stateId = d.id;
+                    const stateInfo = getStateInfoFromId(stateId);
+                    if (!stateInfo) return '#eee';
+                    
+                    const stateCode = stateInfo.code;
+                    const stateData = stateDataMap[stateCode];
+                    
+                    // If we have data for this state
+                    if (stateData && stateData.color) {
+                        return stateData.color;
+                    }
+                    
+                    // No data for this state
+                    return '#eee';
+                })
+                .attr('stroke', '#fff')
+                .attr('stroke-width', 0.5)
+                .on('mouseover', (event, d) => {
+                    const stateInfo = getStateInfoFromId(d.id);
+                    if (!stateInfo) return;
+                    
+                    const stateCode = stateInfo.code;
+                    const stateName = stateInfo.name;
+                    const stateData = stateDataMap[stateCode];
+                    
+                    d3.select(event.currentTarget)
+                        .attr('stroke', '#333')
+                        .attr('stroke-width', 1.5);
+                    
+                    tooltip
+                        .style('opacity', 1)
+                        .style('left', `${event.pageX + 10}px`)
+                        .style('top', `${event.pageY + 10}px`);
+                    
+                    let tooltipContent = `<strong>${stateName}</strong>`;
+                    if (stateData) {
+                        tooltipContent += `<br>Value: ${stateData.value}`;
+                    } else {
+                        tooltipContent += '<br>No data available';
+                    }
+                    
+                    tooltip.html(tooltipContent);
+                })
+                .on('mousemove', (event) => {
+                    tooltip
+                        .style('left', `${event.pageX + 10}px`)
+                        .style('top', `${event.pageY + 10}px`);
+                })
+                .on('mouseout', (event) => {
+                    d3.select(event.currentTarget)
+                        .attr('stroke', '#fff')
+                        .attr('stroke-width', 0.5);
+                    
+                    tooltip.style('opacity', 0);
+                });
+            
+            // Add legend
+            const legendWidth = 200;
+            const legendHeight = 20;
+            const legendX = width * 0.5 - legendWidth / 2;
+            const legendY = height - 40;
+            
+            // Create gradient for legend
+            const defs = svg.append('defs');
+            const gradient = defs.append('linearGradient')
+                .attr('id', 'legend-gradient')
+                .attr('x1', '0%')
+                .attr('x2', '100%')
+                .attr('y1', '0%')
+                .attr('y2', '0%');
+            
+            // Extract unique colors
+            const colorValues = stateData.map(d => d.color);
+            const uniqueColorsMap = {};
+            const uniqueColors = [];
+            
+            // Manually create array of unique colors
+            colorValues.forEach(color => {
+                if (!uniqueColorsMap[color]) {
+                    uniqueColorsMap[color] = true;
+                    uniqueColors.push(color);
+                }
+            });
+            
+            // Create gradient stops
+            uniqueColors.forEach((color, index) => {
+                const offset = `${index * 100 / (uniqueColors.length - 1 || 1)}%`;
+                gradient.append('stop')
+                    .attr('offset', offset)
+                    .attr('stop-color', color);
+            });
+            
+            // Draw legend rectangle
+            svg.append('rect')
+                .attr('x', legendX)
+                .attr('y', legendY)
+                .attr('width', legendWidth)
+                .attr('height', legendHeight)
+                .style('fill', 'url(#legend-gradient)')
+                .attr('stroke', '#ccc')
+                .attr('stroke-width', 1);
+            
+            // Add legend title
+            svg.append('text')
+                .attr('x', legendX)
+                .attr('y', legendY - 5)
+                .attr('font-size', '12px')
+                .attr('fill', '#333')
+                .text('Value');
+            
+            // Add min label
+            svg.append('text')
+                .attr('x', legendX)
+                .attr('y', legendY + legendHeight + 15)
+                .attr('font-size', '12px')
+                .attr('fill', '#000')
+                .attr('font-weight', 'bold')
+                .text('Low');
+            
+            // Add max label
+            svg.append('text')
+                .attr('x', legendX + legendWidth)
+                .attr('y', legendY + legendHeight + 15)
+                .attr('font-size', '12px')
+                .attr('fill', '#000')
+                .attr('text-anchor', 'end')
+                .attr('font-weight', 'bold')
+                .text('High');
+        }
+        
+        // Helper function to get state info from ID
+        function getStateInfoFromId(id) {
+            // Map of state IDs to state codes and names
+            const stateMap = {
+                "01": { code: "AL", name: "Alabama" },
+                "02": { code: "AK", name: "Alaska" },
+                "04": { code: "AZ", name: "Arizona" },
+                "05": { code: "AR", name: "Arkansas" },
+                "06": { code: "CA", name: "California" },
+                "08": { code: "CO", name: "Colorado" },
+                "09": { code: "CT", name: "Connecticut" },
+                "10": { code: "DE", name: "Delaware" },
+                "11": { code: "DC", name: "District of Columbia" },
+                "12": { code: "FL", name: "Florida" },
+                "13": { code: "GA", name: "Georgia" },
+                "15": { code: "HI", name: "Hawaii" },
+                "16": { code: "ID", name: "Idaho" },
+                "17": { code: "IL", name: "Illinois" },
+                "18": { code: "IN", name: "Indiana" },
+                "19": { code: "IA", name: "Iowa" },
+                "20": { code: "KS", name: "Kansas" },
+                "21": { code: "KY", name: "Kentucky" },
+                "22": { code: "LA", name: "Louisiana" },
+                "23": { code: "ME", name: "Maine" },
+                "24": { code: "MD", name: "Maryland" },
+                "25": { code: "MA", name: "Massachusetts" },
+                "26": { code: "MI", name: "Michigan" },
+                "27": { code: "MN", name: "Minnesota" },
+                "28": { code: "MS", name: "Mississippi" },
+                "29": { code: "MO", name: "Missouri" },
+                "30": { code: "MT", name: "Montana" },
+                "31": { code: "NE", name: "Nebraska" },
+                "32": { code: "NV", name: "Nevada" },
+                "33": { code: "NH", name: "New Hampshire" },
+                "34": { code: "NJ", name: "New Jersey" },
+                "35": { code: "NM", name: "New Mexico" },
+                "36": { code: "NY", name: "New York" },
+                "37": { code: "NC", name: "North Carolina" },
+                "38": { code: "ND", name: "North Dakota" },
+                "39": { code: "OH", name: "Ohio" },
+                "40": { code: "OK", name: "Oklahoma" },
+                "41": { code: "OR", name: "Oregon" },
+                "42": { code: "PA", name: "Pennsylvania" },
+                "44": { code: "RI", name: "Rhode Island" },
+                "45": { code: "SC", name: "South Carolina" },
+                "46": { code: "SD", name: "South Dakota" },
+                "47": { code: "TN", name: "Tennessee" },
+                "48": { code: "TX", name: "Texas" },
+                "49": { code: "UT", name: "Utah" },
+                "50": { code: "VT", name: "Vermont" },
+                "51": { code: "VA", name: "Virginia" },
+                "53": { code: "WA", name: "Washington" },
+                "54": { code: "WV", name: "West Virginia" },
+                "55": { code: "WI", name: "Wisconsin" },
+                "56": { code: "WY", name: "Wyoming" }
+            };
+            
+            return stateMap[id];
+        }
+    </script>
+</body>
+</html>
